@@ -10,31 +10,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f5f6f8;
+  --bg: #ffffff;
   --card: #ffffff;
   --ink: #0f1319;
   --muted: #5d6675;
-  --line: #e2e5ea;
-  --accent: #1d4ed8;
-  --accent-soft: #e8eefc;
-  --save: #0a7a4a;
-  --save-soft: #e3f5ec;
-  --rare: #b4350b;
-  --rare-soft: #fdece4;
-  --shadow: 0 1px 2px rgba(15, 19, 25, .05), 0 4px 16px rgba(15, 19, 25, .04);
+  --line: #e4e8ee;
+  --accent: #2563eb;
+  --save: #0a8f4e;
+  --save-soft: #e3f6ec;
+  --rare: #c2410c;
+  --rare-soft: #fff0e6;
+  --tint: #f4f8ff;
+  --shadow: 0 1px 2px rgba(15, 19, 25, .04), 0 6px 18px rgba(37, 99, 235, .06);
   --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color-scheme: light dark;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1116; --card: #161b22; --ink: #eef1f5; --muted: #98a2b1; --line: #262d37;
-    --accent: #7ba3ff; --accent-soft: #1a2640; --save: #4fd18e; --save-soft: #12301f;
-    --rare: #ff9d73; --rare-soft: #3a2015; --shadow: none;
-  }
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--font); }
+body { margin: 0; color: var(--ink); font: 400 16px/1.45 var(--font); }
 a { color: inherit; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
@@ -43,31 +36,26 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Header */
 .hero { padding-block: 40px 20px; }
+body { background: linear-gradient(180deg, var(--tint) 0, #fff 360px) no-repeat; background-color: #fff; }
 .hero h1 { margin: 0; font-size: clamp(1.9rem, 4.5vw, 2.8rem); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; text-wrap: balance; }
 .hero p { margin: 10px 0 0; color: var(--muted); max-width: 60ch; text-wrap: pretty; }
 .stats { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 16px; font-size: .9rem; color: var(--muted); }
 .stats b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* Controls */
-.controls { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 12px 0 10px; }
+.controls { position: sticky; top: 0; z-index: 5; background: rgba(255, 255, 255, .92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 12px 0 10px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.search { flex: 1 1 260px; position: relative; }
+.search { flex: 1 1 150px; position: relative; }
 .search input { width: 100%; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 14px 0 40px; }
 .search svg { position: absolute; left: 13px; top: 50%; translate: 0 -50%; width: 18px; height: 18px; color: var(--muted); pointer-events: none; }
 .sel { position: relative; }
-.sel select { appearance: none; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 34px 0 14px; max-width: 220px; cursor: pointer; }
+.sel select { appearance: none; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 34px 0 14px; max-width: 230px; cursor: pointer; }
 .sel::after { content: ""; position: absolute; right: 14px; top: 50%; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); translate: 0 -70%; rotate: 45deg; pointer-events: none; }
 .sel select:disabled { opacity: .45; cursor: not-allowed; }
 .sel .tag { position: absolute; left: 14px; top: 5px; font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); pointer-events: none; }
 .sel.labeled select { padding-top: 14px; padding-bottom: 0; height: 44px; }
 .sel.labeled select { padding-left: 14px; }
 
-.chips { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
-.chip { flex: none; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 13px; font-size: .88rem; cursor: pointer; white-space: nowrap; }
-.chip .n { color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
-.chip:hover { border-color: var(--muted); }
-.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.chip[aria-pressed="true"] .n { color: inherit; opacity: .7; }
 
 .status { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 12px; color: var(--muted); font-size: .92rem; }
 .status b { color: var(--ink); font-weight: 600; }
@@ -80,7 +68,6 @@ button, input, select { font: inherit; color: inherit; }
 .media img { width: 100%; height: 100%; object-fit: contain; padding: 14px; display: block; }
 .media.none::after { content: "No photo"; position: absolute; inset: 0; display: grid; place-items: center; color: #8a93a1; font-size: .85rem; }
 .pct { position: absolute; top: 10px; left: 10px; background: var(--save); color: #fff; font-weight: 700; font-size: .85rem; padding: 3px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
-@media (prefers-color-scheme: dark) { .pct { color: #06140d; } }
 .rare { position: absolute; bottom: 10px; left: 10px; background: var(--rare-soft); color: var(--rare); font-weight: 600; font-size: .75rem; padding: 3px 9px; border-radius: 999px; }
 .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .brand { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-height: 1.1em; }
@@ -88,9 +75,9 @@ button, input, select { font: inherit; color: inherit; }
 .card h2 a { text-decoration: none; }
 .card h2 a:hover { text-decoration: underline; }
 .price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.price strong { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.price strong { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; color: var(--save); }
 .price s { color: var(--muted); font-size: .95rem; }
-.price small { color: var(--muted); font-size: .8rem; }
+.price small { color: var(--muted); font-size: .8rem; font-weight: 500; letter-spacing: 0; }
 .where { margin: 0; font-size: .86rem; color: var(--muted); }
 .where b { color: var(--ink); font-weight: 600; }
 .actions { margin-top: auto; padding-top: 10px; display: flex; gap: 8px; }
@@ -117,7 +104,7 @@ dialog::backdrop { background: rgba(10, 14, 20, .5); backdrop-filter: blur(2px);
 .stores li:last-child { border-bottom: 0; }
 .stores .nm { font-weight: 600; }
 .stores .ad { color: var(--muted); font-size: .85rem; grid-column: 1; }
-.stores .pr { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.stores .pr { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--save); }
 .stores .pr s { color: var(--muted); font-weight: 400; font-size: .85rem; margin-left: 6px; }
 .stores .st { text-align: right; color: var(--muted); font-size: .85rem; }
 .stores .go { grid-column: 1 / -1; font-size: .88rem; color: var(--accent); font-weight: 600; text-decoration: none; margin-top: 2px; }
@@ -139,6 +126,7 @@ footer p { margin: 10px 0 0; }
   .actions { flex-direction: column; }
   .sel select { max-width: none; }
   .sel { flex: 1 1 calc(50% - 8px); }
+  .sel.cat { flex-basis: 100%; }
   .sel select { width: 100%; }
 }
 @media (max-width: 380px) { .grid { grid-template-columns: 1fr; } }
@@ -158,8 +146,9 @@ footer p { margin: 10px 0 0; }
       <label class="search">
         <span class="sr" hidden>Search</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" id="q" placeholder="Search products, brands or SKUs" autocomplete="off" aria-label="Search products, brands or SKUs">
+        <input type="search" id="q" placeholder="Search deals" autocomplete="off" aria-label="Search products, brands or SKUs">
       </label>
+      <div class="sel labeled cat"><span class="tag">Category</span><select id="cat" aria-label="Category"></select></div>
       <div class="sel labeled"><span class="tag">Near store</span><select id="store" aria-label="Near store"><option value="-1">Any store</option></select></div>
       <div class="sel labeled"><span class="tag">Distance</span><select id="radius" aria-label="Distance from the selected store">
         <option value="0">This store only</option>
@@ -185,7 +174,6 @@ footer p { margin: 10px 0 0; }
         <option value="90">90% or more</option>
       </select></div>
     </div>
-    <div class="chips" id="cats" role="group" aria-label="Category"></div>
   </div>
 </section>
 
@@ -303,9 +291,9 @@ footer p { margin: 10px 0 0; }
   }
 
   function renderCats(counts, total) {
-    const btn = (i, label, n) => `<button type="button" class="chip" data-cat="${i}" aria-pressed="${state.cat === i}">${esc(label)}<span class="n">${n.toLocaleString()}</span></button>`;
-    const order = D.cats.map((c, i) => i).sort((a, b) => counts[b] - counts[a]);
-    $('cats').innerHTML = btn(-1, 'All', total) + order.filter(i => counts[i] > 0 || state.cat === i).map(i => btn(i, D.cats[i], counts[i])).join('');
+    const order = D.cats.map((c, i) => i).sort((x, y) => counts[y] - counts[x]);
+    const opt = (i, label, n) => `<option value="${i}"${state.cat === i ? ' selected' : ''}>${esc(label)} (${n.toLocaleString()})</option>`;
+    $('cat').innerHTML = `<option value="-1"${state.cat === -1 ? ' selected' : ''}>All categories</option>` + order.filter(i => counts[i] > 0 || state.cat === i).map(i => opt(i, D.cats[i], counts[i])).join('');
   }
 
   const storeName = (i) => STORES[i] ? STORES[i][1] : 'Store ' + i;
@@ -383,7 +371,7 @@ footer p { margin: 10px 0 0; }
     $('maxn').addEventListener('change', e => set('maxn', +e.target.value));
     $('minpct').addEventListener('change', e => set('minpct', +e.target.value));
     $('sort').addEventListener('change', e => set('sort', e.target.value));
-    $('cats').addEventListener('click', e => { const b = e.target.closest('button[data-cat]'); if (b) set('cat', +b.dataset.cat); });
+    $('cat').addEventListener('change', e => set('cat', +e.target.value));
     $('more').addEventListener('click', () => { shown += PAGE; render(false); });
     $('list').addEventListener('click', e => { const b = e.target.closest('button[data-stores]'); if (b) openStores(+b.dataset.stores); });
     $('dclose').addEventListener('click', () => $('dlg').close());
