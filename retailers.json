@@ -1,0 +1,12 @@
+{
+  "retailers": [
+    {
+      "id": "canadian-tire",
+      "name": "Canadian Tire",
+      "path": "canadian-tire/",
+      "logo": null,
+      "tagline": "Ontario stores \u00b7 50% off or more",
+      "live": true
+    }
+  ]
+}
