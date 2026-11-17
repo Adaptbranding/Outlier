@@ -15,6 +15,14 @@
       "logo": null,
       "tagline": "Ontario stores \u00b7 online clearance 50% off or more",
       "live": true
+    },
+    {
+      "id": "rona",
+      "name": "RONA",
+      "path": "rona/",
+      "logo": null,
+      "tagline": "Ontario stores \u00b7 50% off or more",
+      "live": true
     }
   ]
 }

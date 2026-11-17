@@ -20,3 +20,16 @@ Run in the same scheduled task, after Canadian Tire is pushed. Same rules: only 
 4. Stage that file from the Downloads folder, run `python3 -I refresh/build_data.py <raw.json> data/home-hardware/deals.json hh`.
 5. Checks before pushing: stores >= 300, items >= 20, dropped.bad_url == 0, with_image >= 90% of items, errs in the browser == 0 (or only a handful).
 6. Commit only `data/home-hardware/deals.json` and push to `main`.
+
+## RONA (third retailer)
+
+Scan: open any page on rona.ca in Chrome, paste `refresh/rona_scan.js`, and poll `window.__RA`.
+It selects each of the 115 Ontario stores by cookie (`RonaWCCookie.stores.selected` and `RonaWCCookie.storesize`),
+reads every clearance department (96 items per page), keeps items priced at 50% off or more with stock in store,
+and restores your original selected store when it ends. Roughly 3,500 requests and about 2 hours.
+It stops by itself on a 403/429/503 or a challenge page and never tries to get around one; the store being scanned
+at that moment is incomplete, so drop it before exporting (the last session lost 1 of 115 this way).
+
+Export: `window.__raDownload(window.__raExport(), 'rona-ontario-outliers-YYYY-MM-DD.json')`, stage from Downloads,
+then `python3 -I refresh/build_data.py <raw.json> data/rona/deals.json ra`.
+Items at every scanned store are dropped by build_data.py (they are not outliers).

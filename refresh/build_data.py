@@ -1,7 +1,7 @@
 import json, re, sys, math
 
 raw_path, out_path = sys.argv[1], sys.argv[2]
-retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default) or "hh"
+retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default), "hh" or "ra"
 with open(raw_path, encoding="utf-8") as f:
     raw = json.load(f)
 
@@ -38,6 +38,9 @@ nstores = len(stores)
 if retailer == "hh":
     path_re = re.compile(r"^/en/[a-z0-9\-]+/p/\d+$")
     img_re = re.compile(r"^https://homehardware\.sirv\.com/products/\d+/\d+\.view$")
+elif retailer == "ra":
+    path_re = re.compile(r"^/en/product/[a-z0-9\-]+$")
+    img_re = re.compile(r"^https://cdn\.rona\.ca/images/[A-Za-z0-9_\-]+\.jpg$")
 else:
     path_re = re.compile(r"^/en/pdp/[a-z0-9\-]+\.html$")
     img_re = re.compile(r"^(product/[A-Za-z0-9/_.\-]+|https://media-www\.(canadiantire|partycity)\.ca/[A-Za-z0-9/_.\-]+)$")
