@@ -181,9 +181,9 @@ footer p { margin: 10px 0 0; }
   <div class="status">
     <span id="count" aria-live="polite"></span>
     <div class="sel labeled"><span class="tag">Sort</span><select id="sort" aria-label="Sort by">
+      <option value="save">Biggest $ saving</option>
       <option value="pct">Biggest % off</option>
       <option value="rare">Fewest stores</option>
-      <option value="save">Biggest $ saving</option>
       <option value="low">Lowest price</option>
       <option value="stock">Most in stock</option>
       <option value="dist">Closest store</option>
@@ -216,10 +216,10 @@ footer p { margin: 10px 0 0; }
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const PAGE = 48;
   let D = null, ITEMS = [], STORES = [], shown = PAGE, current = [], DIST = null;
-  const state = { q: '', cat: -1, store: -1, radius: 50, maxn: 0, minpct: 50, sort: 'pct' };
+  const state = { q: '', cat: -1, store: -1, radius: 50, maxn: 0, minpct: 50, sort: 'save' };
 
-  try { const saved = JSON.parse(localStorage.getItem('ctOutlierFilters') || 'null'); if (saved) Object.assign(state, saved, { q: '' }); } catch (e) {}
-  function persist() { try { localStorage.setItem('ctOutlierFilters', JSON.stringify({ store: state.store, radius: state.radius, maxn: state.maxn, minpct: state.minpct, sort: state.sort })); } catch (e) {} }
+  try { const saved = JSON.parse(localStorage.getItem('ctOutlierFilters2') || 'null'); if (saved) Object.assign(state, saved, { q: '' }); } catch (e) {}
+  function persist() { try { localStorage.setItem('ctOutlierFilters2', JSON.stringify({ store: state.store, radius: state.radius, maxn: state.maxn, minpct: state.minpct, sort: state.sort })); } catch (e) {} }
 
   function km(a, b) {
     if (a[3] == null || b[3] == null) return Infinity;
@@ -286,7 +286,7 @@ footer p { margin: 10px 0 0; }
       stock: (a, b) => (b.best.q ?? -1) - (a.best.q ?? -1) || b.best.pct - a.best.pct,
       dist: (a, b) => (a.nd ?? 1e9) - (b.nd ?? 1e9) || b.best.pct - a.best.pct
     };
-    out.sort(by[state.sort] || by.pct);
+    out.sort(by[state.sort] || by.save);
     return { out, catCounts, allCount, dist };
   }
 
