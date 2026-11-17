@@ -3,190 +3,231 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ontario Clearance Outliers</title>
+<title>Ontario outlier deals</title>
+<meta name="description" content="Canadian Tire products 50% off or more at only some Ontario stores, with price, stock and photos.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: sticky filter rail on the left, scannable deal rows on the right; yellow clearance-tag accent for % off. */
 :root {
-  --bg: #f3f4f1;
-  --panel: #ffffff;
-  --ink: #1b2430;
-  --muted: #5d6874;
-  --line: #dfe2dc;
-  --accent: #1f4e5f;
-  --accent-ink: #ffffff;
-  --tag: #f5c518;
-  --tag-ink: #1b1b12;
-  --hot: #c2410c;
-  --hot-bg: #fdeee5;
-  --font-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
-  --font-body: "Source Sans 3", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color-scheme: light;
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --ink: #0f1319;
+  --muted: #5d6675;
+  --line: #e2e5ea;
+  --accent: #1d4ed8;
+  --accent-soft: #e8eefc;
+  --save: #0a7a4a;
+  --save-soft: #e3f5ec;
+  --rare: #b4350b;
+  --rare-soft: #fdece4;
+  --shadow: 0 1px 2px rgba(15, 19, 25, .05), 0 4px 16px rgba(15, 19, 25, .04);
+  --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #12171c; --panel: #1a2128; --ink: #e6eaee; --muted: #9aa6b2; --line: #2c353e;
-    --accent: #6fb3c8; --accent-ink: #0d1418; --tag: #f5c518; --tag-ink: #1b1b12;
-    --hot: #ff9a62; --hot-bg: #3a2318; color-scheme: dark;
+  :root {
+    --bg: #0d1116; --card: #161b22; --ink: #eef1f5; --muted: #98a2b1; --line: #262d37;
+    --accent: #7ba3ff; --accent-soft: #1a2640; --save: #4fd18e; --save-soft: #12301f;
+    --rare: #ff9d73; --rare-soft: #3a2015; --shadow: none;
   }
 }
-:root[data-theme="dark"] {
-  --bg: #12171c; --panel: #1a2128; --ink: #e6eaee; --muted: #9aa6b2; --line: #2c353e;
-  --accent: #6fb3c8; --accent-ink: #0d1418; --tag: #f5c518; --tag-ink: #1b1b12;
-  --hot: #ff9a62; --hot-bg: #3a2318; color-scheme: dark;
-}
 * { box-sizing: border-box; }
-html, body { margin: 0; }
-body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
-a { color: var(--accent); }
-a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--tag); outline-offset: 2px; }
-header.top { padding: 20px 24px 12px; display: grid; gap: 12px; }
-h1 { font-family: var(--font-display); font-weight: 700; font-size: 2.1rem; letter-spacing: .01em; margin: 0; text-wrap: balance; line-height: 1.05; }
-.sub { color: var(--muted); margin: 0; max-width: 75ch; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
-.tile b { display: block; font-family: var(--font-display); font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.tile span { color: var(--muted); font-size: .88rem; }
-.wrap { display: grid; grid-template-columns: 290px 1fr; gap: 20px; padding: 0 24px 40px; align-items: start; }
-aside { position: sticky; top: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 16px; max-height: calc(100vh - 24px); overflow: auto; }
-.field { display: grid; gap: 6px; }
-.field label, .field .lbl { font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
-select:disabled { opacity: .5; }
-input[type="search"], select { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
-.cats { display: grid; gap: 2px; }
-.cats button { all: unset; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: 6px; }
-.cats button:hover { background: var(--bg); }
-.cats button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-.cats button .n { font-variant-numeric: tabular-nums; opacity: .8; }
-.note { font-size: .82rem; color: var(--muted); margin: 0; }
-main { display: grid; gap: 10px; min-width: 0; }
-.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
-.bar .count { font-weight: 700; }
-.bar select { width: auto; }
-.list { display: grid; gap: 8px; }
-.item { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 96px 1fr auto; gap: 6px 16px; }
-.thumb { width: 96px; height: 96px; border-radius: 8px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; align-self: start; }
-.thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.thumb.none::after { content: "No photo"; color: #8a949e; font-size: .72rem; text-align: center; }
-.item.one { border-left: 5px solid var(--hot); }
-.item h2 { font-size: 1.05rem; margin: 0; line-height: 1.3; }
-.item h2 a { color: var(--ink); text-decoration: none; }
-.item h2 a:hover { text-decoration: underline; color: var(--accent); }
-.meta { color: var(--muted); font-size: .88rem; display: flex; flex-wrap: wrap; gap: 4px 10px; }
-.chip { display: inline-block; font-size: .78rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
-.price { text-align: right; display: grid; gap: 2px; justify-items: end; align-content: start; }
-.price .now { font-family: var(--font-display); font-size: 1.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.price .was { color: var(--muted); text-decoration: line-through; font-size: .9rem; font-variant-numeric: tabular-nums; }
-.off { background: var(--tag); color: var(--tag-ink); font-weight: 700; font-family: var(--font-display); font-size: 1.05rem; padding: 1px 8px; border-radius: 3px; clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 50%); padding-left: 14px; }
-.where { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .92rem; }
-.stock { font-weight: 600; color: var(--accent); }
-.badge { font-weight: 700; font-size: .8rem; padding: 2px 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); }
-.badge.hot { background: var(--hot-bg); color: var(--hot); border-color: transparent; }
-details { grid-column: 1 / -1; }
-summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
-.tblwrap { overflow-x: auto; margin-top: 8px; }
-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
-th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.more { justify-self: center; font: inherit; font-weight: 700; padding: 10px 22px; border-radius: 8px; border: 1px solid var(--accent); background: var(--panel); color: var(--accent); cursor: pointer; }
-.more:hover { background: var(--accent); color: var(--accent-ink); }
-.empty { padding: 30px; text-align: center; color: var(--muted); background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; }
-footer { padding: 0 24px 30px; color: var(--muted); font-size: .85rem; max-width: 90ch; }
-@media (max-width: 860px) {
-  .wrap { grid-template-columns: 1fr; padding: 0 16px 30px; }
-  header.top { padding: 16px; }
-  aside { position: static; max-height: none; }
-  footer { padding: 0 16px 24px; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--font); }
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+
+/* Header */
+.hero { padding-block: 40px 20px; }
+.hero h1 { margin: 0; font-size: clamp(1.9rem, 4.5vw, 2.8rem); line-height: 1.05; letter-spacing: -.03em; font-weight: 700; text-wrap: balance; }
+.hero p { margin: 10px 0 0; color: var(--muted); max-width: 60ch; text-wrap: pretty; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 16px; font-size: .9rem; color: var(--muted); }
+.stats b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Controls */
+.controls { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); padding: 12px 0 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.search { flex: 1 1 260px; position: relative; }
+.search input { width: 100%; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 14px 0 40px; }
+.search svg { position: absolute; left: 13px; top: 50%; translate: 0 -50%; width: 18px; height: 18px; color: var(--muted); pointer-events: none; }
+.sel { position: relative; }
+.sel select { appearance: none; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 34px 0 14px; max-width: 220px; cursor: pointer; }
+.sel::after { content: ""; position: absolute; right: 14px; top: 50%; width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); translate: 0 -70%; rotate: 45deg; pointer-events: none; }
+.sel select:disabled { opacity: .45; cursor: not-allowed; }
+.sel .tag { position: absolute; left: 14px; top: 5px; font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); pointer-events: none; }
+.sel.labeled select { padding-top: 14px; padding-bottom: 0; height: 44px; }
+.sel.labeled select { padding-left: 14px; }
+
+.chips { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 13px; font-size: .88rem; cursor: pointer; white-space: nowrap; }
+.chip .n { color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip[aria-pressed="true"] .n { color: inherit; opacity: .7; }
+
+.status { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 12px; color: var(--muted); font-size: .92rem; }
+.status b { color: var(--ink); font-weight: 600; }
+
+/* Grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
+.card:hover { border-color: color-mix(in srgb, var(--ink) 28%, var(--line)); transform: translateY(-2px); }
+.media { position: relative; display: block; aspect-ratio: 1; background: #fff; border-bottom: 1px solid var(--line); }
+.media img { width: 100%; height: 100%; object-fit: contain; padding: 14px; display: block; }
+.media.none::after { content: "No photo"; position: absolute; inset: 0; display: grid; place-items: center; color: #8a93a1; font-size: .85rem; }
+.pct { position: absolute; top: 10px; left: 10px; background: var(--save); color: #fff; font-weight: 700; font-size: .85rem; padding: 3px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+@media (prefers-color-scheme: dark) { .pct { color: #06140d; } }
+.rare { position: absolute; bottom: 10px; left: 10px; background: var(--rare-soft); color: var(--rare); font-weight: 600; font-size: .75rem; padding: 3px 9px; border-radius: 999px; }
+.body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.brand { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-height: 1.1em; }
+.card h2 { margin: 0; font-size: 1rem; line-height: 1.3; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card h2 a { text-decoration: none; }
+.card h2 a:hover { text-decoration: underline; }
+.price { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.price strong { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.price s { color: var(--muted); font-size: .95rem; }
+.price small { color: var(--muted); font-size: .8rem; }
+.where { margin: 0; font-size: .86rem; color: var(--muted); }
+.where b { color: var(--ink); font-weight: 600; }
+.actions { margin-top: auto; padding-top: 10px; display: flex; gap: 8px; }
+.btn { flex: 1; text-align: center; text-decoration: none; border-radius: 10px; padding: 9px 12px; font-weight: 600; font-size: .9rem; border: 1px solid var(--ink); background: var(--ink); color: var(--bg); cursor: pointer; }
+.btn:hover { opacity: .88; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--muted); opacity: 1; }
+
+.more { display: block; margin: 28px auto 0; padding: 12px 26px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-weight: 600; cursor: pointer; }
+.more:hover { border-color: var(--muted); }
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); background: var(--card); border: 1px dashed var(--line); border-radius: 16px; }
+.empty b { display: block; color: var(--ink); font-size: 1.1rem; margin-bottom: 4px; }
+
+/* Store dialog */
+dialog { width: min(640px, calc(100vw - 24px)); max-height: min(80vh, 720px); padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--card); color: var(--ink); box-shadow: 0 24px 64px rgba(0, 0, 0, .3); }
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { background: rgba(10, 14, 20, .5); backdrop-filter: blur(2px); overflow: hidden; overscroll-behavior: contain; }
+.dhead { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 18px 20px 12px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--card); }
+.dhead h3 { margin: 0; font-size: 1.05rem; line-height: 1.3; }
+.dhead p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; }
+.x { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 1.2rem; line-height: 1; }
+.stores { list-style: none; margin: 0; padding: 4px 20px 16px; }
+.stores li { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.stores li:last-child { border-bottom: 0; }
+.stores .nm { font-weight: 600; }
+.stores .ad { color: var(--muted); font-size: .85rem; grid-column: 1; }
+.stores .pr { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.stores .pr s { color: var(--muted); font-weight: 400; font-size: .85rem; margin-left: 6px; }
+.stores .st { text-align: right; color: var(--muted); font-size: .85rem; }
+.stores .go { grid-column: 1 / -1; font-size: .88rem; color: var(--accent); font-weight: 600; text-decoration: none; margin-top: 2px; }
+.stores .go:hover { text-decoration: underline; }
+
+footer { margin: 48px 0 40px; color: var(--muted); font-size: .85rem; }
+footer details { max-width: 80ch; }
+footer summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+footer p { margin: 10px 0 0; }
+
+@media (max-width: 640px) {
+  .wrap { padding: 0 14px; }
+  .hero { padding-block: 26px 14px; }
+  .controls { position: static; backdrop-filter: none; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .body { padding: 10px 12px 12px; }
+  .price strong { font-size: 1.25rem; }
+  .media img { padding: 8px; }
+  .actions { flex-direction: column; }
+  .sel select { max-width: none; }
+  .sel { flex: 1 1 calc(50% - 8px); }
+  .sel select { width: 100%; }
 }
-@media (max-width: 420px) {
-  .item { grid-template-columns: 72px 1fr; }
-  .thumb { width: 72px; height: 72px; }
-  .price { grid-column: 1 / -1; justify-items: start; text-align: left; }
-}
-@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+@media (max-width: 380px) { .grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
 </style>
 </head>
 <body>
-<header class="top">
-  <h1>Ontario Canadian Tire clearance outliers</h1>
-  <p class="sub" id="sub">Items priced 50% off or more at some Ontario Canadian Tire stores but not at every store. Loading the store scan…</p>
-  <div class="tiles" id="tiles"></div>
+<header class="wrap hero">
+  <h1>Ontario outlier deals</h1>
+  <p>Canadian Tire products at 50% off or more in some Ontario stores, but not in all of them.</p>
+  <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
 </header>
-<div class="wrap">
-  <aside aria-label="Filters">
-    <div class="field">
-      <label for="q">Search</label>
-      <input type="search" id="q" placeholder="Product, brand or SKU" autocomplete="off">
-    </div>
-    <div class="field">
-      <label for="store">Near store</label>
-      <select id="store"><option value="-1">Any Ontario store</option></select>
-      <select id="radius" aria-label="Distance from the selected store">
-        <option value="0">This store only</option>
-        <option value="25">Within 25 km</option>
-        <option value="50" selected>Within 50 km</option>
-        <option value="100">Within 100 km</option>
-        <option value="200">Within 200 km</option>
-        <option value="-1">Anywhere in Ontario</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="maxn">How rare is the deal?</label>
-      <select id="maxn">
-        <option value="1">Only 1 store in Ontario</option>
-        <option value="3">3 stores or fewer</option>
-        <option value="5">5 stores or fewer</option>
-        <option value="10">10 stores or fewer</option>
-        <option value="25">25 stores or fewer</option>
-        <option value="0" selected>Any number of stores</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="minpct">Minimum discount</label>
-      <select id="minpct">
-        <option value="50" selected>50% off or more</option>
-        <option value="60">60% off or more</option>
-        <option value="70">70% off or more</option>
-        <option value="80">80% off or more</option>
-        <option value="90">90% off or more</option>
-      </select>
-    </div>
-    <div class="field">
-      <span class="lbl" id="catlbl">Category</span>
-      <div class="cats" id="cats" role="group" aria-labelledby="catlbl"></div>
-    </div>
-    <p class="note">Category comes from Canadian Tire's own department filter. Some items sit in two departments.</p>
-  </aside>
-  <main>
-    <div class="bar">
-      <span class="count" id="count" aria-live="polite"></span>
-      <label>Sort
-        <select id="sort">
-          <option value="pct">Biggest % off</option>
-          <option value="rare">Fewest stores first</option>
-          <option value="save">Biggest $ saving</option>
-          <option value="low">Lowest price</option>
-          <option value="stock">Most in stock</option>
-          <option value="dist">Closest store (needs a store)</option>
-        </select>
+
+<section class="controls" aria-label="Filters">
+  <div class="wrap">
+    <div class="row">
+      <label class="search">
+        <span class="sr" hidden>Search</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search products, brands or SKUs" autocomplete="off" aria-label="Search products, brands or SKUs">
       </label>
+      <div class="sel labeled"><span class="tag">Near store</span><select id="store" aria-label="Near store"><option value="-1">Any store</option></select></div>
+      <div class="sel labeled"><span class="tag">Distance</span><select id="radius" aria-label="Distance from the selected store">
+        <option value="0">This store only</option>
+        <option value="25">25 km</option>
+        <option value="50" selected>50 km</option>
+        <option value="100">100 km</option>
+        <option value="200">200 km</option>
+        <option value="-1">Anywhere</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Stores with deal</span><select id="maxn" aria-label="How many stores have the deal">
+        <option value="0" selected>Any</option>
+        <option value="1">Only 1 store</option>
+        <option value="3">3 or fewer</option>
+        <option value="5">5 or fewer</option>
+        <option value="10">10 or fewer</option>
+        <option value="25">25 or fewer</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Discount</span><select id="minpct" aria-label="Minimum discount">
+        <option value="50" selected>50% or more</option>
+        <option value="60">60% or more</option>
+        <option value="70">70% or more</option>
+        <option value="80">80% or more</option>
+        <option value="90">90% or more</option>
+      </select></div>
     </div>
-    <div class="list" id="list"></div>
-    <button class="more" id="more" type="button" hidden>Show 60 more</button>
-  </main>
-</div>
-<footer id="foot"></footer>
+    <div class="chips" id="cats" role="group" aria-label="Category"></div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="status">
+    <span id="count" aria-live="polite"></span>
+    <div class="sel labeled"><span class="tag">Sort</span><select id="sort" aria-label="Sort by">
+      <option value="pct">Biggest % off</option>
+      <option value="rare">Fewest stores</option>
+      <option value="save">Biggest $ saving</option>
+      <option value="low">Lowest price</option>
+      <option value="stock">Most in stock</option>
+      <option value="dist">Closest store</option>
+    </select></div>
+  </div>
+  <div class="grid" id="list"></div>
+  <button class="more" id="more" type="button" hidden>Show more</button>
+  <footer>
+    <details>
+      <summary>About this data</summary>
+      <p id="foot"></p>
+    </details>
+  </footer>
+</main>
+
+<dialog id="dlg" closedby="any" aria-labelledby="dtitle">
+  <div class="dhead">
+    <div><h3 id="dtitle"></h3><p id="dsub"></p></div>
+    <button class="x" type="button" id="dclose" aria-label="Close">×</button>
+  </div>
+  <ul class="stores" id="dlist"></ul>
+</dialog>
+
 <script>
-(function(){
+(function () {
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => n == null ? '' : '$' + n.toFixed(2);
   const offLabel = (d) => Math.max(50, Math.floor(d.raw * 100 + 0.05)) + '%';
-  const stockTxt = (d) => d.q === undefined ? 'stock not checked' : d.q === null ? 'stock varies by option' : `${d.q} in stock`;
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const PAGE = 60;
-  let D = null, ITEMS = [], STORES = [], shown = PAGE, current = [];
+  const stockTxt = (d) => d.q === undefined ? 'stock not checked' : d.q === null ? 'stock varies by option' : d.q + ' in stock';
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const PAGE = 48;
+  let D = null, ITEMS = [], STORES = [], shown = PAGE, current = [], DIST = null;
   const state = { q: '', cat: -1, store: -1, radius: 50, maxn: 0, minpct: 50, sort: 'pct' };
 
   try { const saved = JSON.parse(localStorage.getItem('ctOutlierFilters') || 'null'); if (saved) Object.assign(state, saved, { q: '' }); } catch (e) {}
@@ -202,30 +243,30 @@ footer { padding: 0 24px 30px; color: var(--muted); font-size: .85rem; max-width
 
   function imgUrl(v) {
     if (typeof v !== 'string' || !v) return '';
-    if (/^product\/[A-Za-z0-9\/_.\-]+$/.test(v)) return 'https://media-www.canadiantire.ca/' + v + '?imwidth=200';
-    if (/^https:\/\/media-www\.(canadiantire|partycity)\.ca\/[A-Za-z0-9\/_.\-]+$/.test(v)) return v + '?imwidth=200';
+    if (/^product\/[A-Za-z0-9\/_.\-]+$/.test(v)) return 'https://media-www.canadiantire.ca/' + v + '?imwidth=400';
+    if (/^https:\/\/media-www\.(canadiantire|partycity)\.ca\/[A-Za-z0-9\/_.\-]+$/.test(v)) return v + '?imwidth=400';
     return '';
   }
 
   function prepare(data) {
     D = data; STORES = data.stores;
     ITEMS = data.items.map(r => {
-      const deals = r[7].map(d => { const raw = d[3] ? 1 - d[1] / d[3] : 0; const q = d.length > 4 ? (typeof d[4] === 'number' && d[4] >= 0 ? d[4] : null) : undefined; return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, raw, pct: Math.round(raw * 1000) / 10 }; });
-      const origs = {}; deals.forEach(d => { origs[d.orig] = (origs[d.orig] || 0) + 1; });
-      const reg = +Object.keys(origs).sort((a, b) => origs[b] - origs[a])[0];
-      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', sku: r[4] || '', cats: r[5], multi: !!r[6], img: imgUrl(r[8]), deals, n: deals.length, reg, hay: (r[1] + ' ' + (r[3] || '') + ' ' + (r[4] || '') + ' ' + r[0]).toLowerCase() };
+      const deals = r[7].map(d => {
+        const raw = d[3] ? 1 - d[1] / d[3] : 0;
+        const q = d.length > 4 ? (typeof d[4] === 'number' && d[4] >= 0 ? d[4] : null) : undefined;
+        return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, raw, pct: Math.round(raw * 1000) / 10 };
+      });
+      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', sku: r[4] || '', cats: r[5], multi: !!r[6], img: imgUrl(r[8]), deals, n: deals.length, hay: (r[1] + ' ' + (r[3] || '') + ' ' + (r[4] || '') + ' ' + r[0]).toLowerCase() };
     });
   }
 
   function storeOpts() {
-    const sel = $('store');
     const sorted = STORES.map((s, i) => [s[1], i]).sort((a, b) => a[0].localeCompare(b[0]));
-    sel.insertAdjacentHTML('beforeend', sorted.map(([name, i]) => `<option value="${i}">${esc(name)}</option>`).join(''));
+    $('store').insertAdjacentHTML('beforeend', sorted.map(([name, i]) => `<option value="${i}">${esc(name)}</option>`).join(''));
   }
 
   function compute() {
-    const q = state.q.trim().toLowerCase();
-    const terms = q ? q.split(/\s+/) : [];
+    const terms = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const home = state.store >= 0 ? STORES[state.store] : null;
     const dist = home ? STORES.map(s => km(home, s)) : null;
     const catCounts = new Array(D.cats.length).fill(0);
@@ -246,7 +287,7 @@ footer { padding: 0 24px 30px; color: var(--muted); font-size: .85rem; max-width
       let best = vis[0];
       for (const d of vis) if (d.pct > best.pct || (d.pct === best.pct && d.sale < best.sale)) best = d;
       let near = null;
-      if (dist) { near = vis.reduce((m, d) => dist[d.s] < dist[m.s] ? d : m, vis[0]); }
+      if (dist) near = vis.reduce((m, d) => dist[d.s] < dist[m.s] ? d : m, vis[0]);
       out.push({ it, vis, best, near, nd: near ? dist[near.s] : null });
     }
     const by = {
@@ -262,70 +303,75 @@ footer { padding: 0 24px 30px; color: var(--muted); font-size: .85rem; max-width
   }
 
   function renderCats(counts, total) {
-    const btn = (i, label, n) => `<button type="button" data-cat="${i}" aria-pressed="${state.cat === i}"><span>${esc(label)}</span><span class="n">${n.toLocaleString()}</span></button>`;
+    const btn = (i, label, n) => `<button type="button" class="chip" data-cat="${i}" aria-pressed="${state.cat === i}">${esc(label)}<span class="n">${n.toLocaleString()}</span></button>`;
     const order = D.cats.map((c, i) => i).sort((a, b) => counts[b] - counts[a]);
-    $('cats').innerHTML = btn(-1, 'All categories', total) + order.filter(i => counts[i] > 0 || state.cat === i).map(i => btn(i, D.cats[i], counts[i])).join('');
+    $('cats').innerHTML = btn(-1, 'All', total) + order.filter(i => counts[i] > 0 || state.cat === i).map(i => btn(i, D.cats[i], counts[i])).join('');
   }
 
-  function storeName(i) { return STORES[i] ? STORES[i][1] : 'Store ' + i; }
+  const storeName = (i) => STORES[i] ? STORES[i][1] : 'Store ' + i;
+  const storeUrl = (it, s) => 'https://www.canadiantire.ca' + it.url + (STORES[s] ? '?store=' + String(STORES[s][0]).padStart(4, '0') : '');
 
-  function storeUrl(it, s) { return 'https://www.canadiantire.ca' + it.url + (STORES[s] ? '?store=' + String(STORES[s][0]).padStart(4, '0') : ''); }
-
-  function row(r, dist) {
+  function card(r, idx, dist) {
     const { it, vis, best } = r;
     const lead = r.near && state.sort === 'dist' ? r.near : best;
     const url = storeUrl(it, lead.s);
-    const rare = it.n === 1 ? '<span class="badge hot">Only 1 store in Ontario</span>' : `<span class="badge${it.n <= 3 ? ' hot' : ''}">${it.n} of ${D.storeCount} stores</span>`;
-    const cats = it.cats.map(c => `<span class="chip">${esc(D.cats[c])}</span>`).join(' ');
+    const km1 = (d) => dist ? ' · ' + Math.round(dist[d.s]) + ' km' : '';
+    const rare = it.n === 1 ? 'Only 1 store' : it.n <= 5 ? it.n + ' stores' : '';
+    const media = it.img
+      ? `<a class="media" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer"><span class="pct">${offLabel(best)} off</span>${rare ? `<span class="rare">${rare}</span>` : ''}</a>`
+      : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><span class="pct">${offLabel(best)} off</span>${rare ? `<span class="rare">${rare}</span>` : ''}</a>`;
     const where = vis.length === 1
-      ? `<span>At <strong>${esc(storeName(vis[0].s))}</strong>${dist ? ` · ${Math.round(dist[vis[0].s])} km` : ''} · <span class="stock">${stockTxt(vis[0])}</span></span>`
-      : `<span>Best at <strong>${esc(storeName(best.s))}</strong>${dist ? ` · ${Math.round(dist[best.s])} km` : ''} · <span class="stock">${stockTxt(best)}</span></span>`;
-    const listed = [...vis].sort((a, b) => dist ? dist[a.s] - dist[b.s] : a.sale - b.sale);
-    const table = vis.length > 1 ? `<details><summary>${vis.length} stores at this level of discount${vis.length !== it.n ? ` (of ${it.n} in Ontario)` : ''}</summary><div class="tblwrap"><table><thead><tr><th>Store</th><th>Address</th>${dist ? '<th class="num">Distance</th>' : ''}<th class="num">Sale</th><th class="num">Regular</th><th class="num">Off</th><th class="num">In stock</th><th>Product page</th></tr></thead><tbody>${listed.map(d => `<tr><td>${esc(storeName(d.s))}</td><td>${esc(STORES[d.s] ? STORES[d.s][2] : '')}</td>${dist ? `<td class="num">${Math.round(dist[d.s])} km</td>` : ''}<td class="num">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}</td><td class="num">${fmt(d.orig)}</td><td class="num">${offLabel(d)}</td><td class="num">${d.q === undefined ? '–' : d.q === null ? 'by option' : d.q}</td><td><a href="${esc(storeUrl(it, d.s))}" target="_blank" rel="noopener">Open at this store</a></td></tr>`).join('')}</tbody></table></div></details>` : `<details><summary>Store address</summary><p class="note">${esc(STORES[vis[0].s] ? STORES[vis[0].s][2] : '')} · <a href="${esc(storeUrl(it, vis[0].s))}" target="_blank" rel="noopener">Open at this store</a></p></details>`;
-    const thumb = it.img ? `<a class="thumb" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="96" height="96" loading="lazy" decoding="async" referrerpolicy="no-referrer"></a>` : '<div class="thumb none" aria-hidden="true"></div>';
-    return `<article class="item${it.n === 1 ? ' one' : ''}">
-      ${thumb}
-      <div><h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
-      <div class="meta"><span>${esc(it.brand)}</span>${it.sku ? `<span>SKU ${esc(it.sku)}</span>` : ''}${cats}${it.multi ? '<span class="chip">Price varies by option</span>' : ''}</div></div>
-      <div class="price"><span class="off">${offLabel(best)} OFF</span><span class="now">${it.multi ? 'from ' : ''}${fmt(best.sale)}</span><span class="was">${fmt(best.orig)}</span></div>
-      <div class="where">${rare}${where}</div>
-      ${table}
-    </article>`;
+      ? `<b>${esc(storeName(vis[0].s))}</b>${km1(vis[0])} · ${stockTxt(vis[0])}`
+      : `Best at <b>${esc(storeName(best.s))}</b>${km1(best)} · ${stockTxt(best)}`;
+    const more = vis.length > 1 ? `<button type="button" class="btn ghost" data-stores="${idx}">All ${vis.length} stores</button>` : '';
+    return `<article class="card">${media}
+      <div class="body">
+        <p class="brand">${esc(it.brand)}</p>
+        <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
+        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong><s>${fmt(best.orig)}</s></p>
+        <p class="where">${where}</p>
+        <div class="actions"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View deal</a>${more}</div>
+      </div></article>`;
   }
 
   function render(resetPage) {
     if (!D) return;
     if (resetPage) shown = PAGE;
     const { out, catCounts, allCount, dist } = compute();
-    current = out;
+    current = out; DIST = dist;
     renderCats(catCounts, allCount);
     $('radius').disabled = state.store < 0;
-    $('count').textContent = `${out.length.toLocaleString()} item${out.length === 1 ? '' : 's'}`;
-    if (!out.length) {
-      $('list').innerHTML = '<div class="empty">No items match these filters. Try a wider distance, a lower minimum discount, or "Any number of stores".</div>';
-    } else {
-      $('list').innerHTML = out.slice(0, shown).map(r => row(r, dist)).join('');
-    }
+    $('count').innerHTML = `<b>${out.length.toLocaleString()}</b> deal${out.length === 1 ? '' : 's'}`;
+    $('list').innerHTML = out.length
+      ? out.slice(0, shown).map((r, i) => card(r, i, dist)).join('')
+      : '<div class="empty" style="grid-column:1/-1"><b>No deals match</b>Try a wider distance, a lower discount, or "Any" stores.</div>';
     const more = $('more');
     more.hidden = out.length <= shown;
     more.textContent = `Show ${Math.min(PAGE, out.length - shown)} more`;
   }
 
-  function tiles() {
+  function openStores(i) {
+    const r = current[i]; if (!r) return;
+    const { it, vis } = r;
+    const listed = [...vis].sort((a, b) => DIST ? DIST[a.s] - DIST[b.s] : a.sale - b.sale);
+    $('dtitle').textContent = it.title;
+    $('dsub').textContent = `${vis.length} store${vis.length === 1 ? '' : 's'} with this discount${vis.length !== it.n ? ` (${it.n} in Ontario in total)` : ''}`;
+    $('dlist').innerHTML = listed.map(d => `<li>
+      <span class="nm">${esc(storeName(d.s))}${DIST ? ' · ' + Math.round(DIST[d.s]) + ' km' : ''}</span>
+      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}<s>${fmt(d.orig)}</s></span>
+      <span class="ad">${esc(STORES[d.s] ? STORES[d.s][2] : '')}</span>
+      <span class="st">${offLabel(d)} off · ${stockTxt(d)}</span>
+      <a class="go" href="${esc(storeUrl(it, d.s))}" target="_blank" rel="noopener">Open at this store</a></li>`).join('');
+    $('dlg').showModal();
+    $('dlg').scrollTop = 0;
+  }
+
+  function summary() {
     const one = ITEMS.filter(i => i.n === 1).length;
-    let deepest = { raw: 0 }; ITEMS.forEach(i => i.deals.forEach(d => { if (d.raw > deepest.raw) deepest = d; }));
-    const pairs = ITEMS.reduce((a, i) => a + i.n, 0);
-    $('tiles').innerHTML = [
-      [ITEMS.length.toLocaleString(), 'outlier items'],
-      [one.toLocaleString(), 'at only one store'],
-      [D.storeCount, 'Ontario stores scanned'],
-      [pairs.toLocaleString(), 'store-level deals'],
-      [offLabel(deepest), 'deepest discount']
-    ].map(([b, s]) => `<div class="tile"><b>${b}</b><span>${s}</span></div>`).join('');
     const when = new Date(D.generated);
-    const hasStock = ITEMS.some(i => i.deals.some(d => d.q !== undefined));
-    $('sub').textContent = `Prices from canadiantire.ca for all ${D.storeCount} Ontario stores, scanned ${when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}. Each item is 50% off or more${hasStock ? ' and in stock' : ''} at one or more stores, but not at every store. ${hasStock ? 'Discontinued and sold-out deals are left out. ' : 'Stock and discontinued checks start with the next daily refresh. '}Product links open on canadiantire.ca with the deal's store already selected.`;
-    $('foot').innerHTML = `Snapshot of the prices canadiantire.ca showed for each store on ${esc(when.toLocaleString('en-CA'))}. ${hasStock ? 'Only deals the store reported as in stock and still selling at scan time are shown: anything discontinued at that store or showing 0 in stock is removed. Stock is the count canadiantire.ca reported for that store and can change quickly, so call the store before you drive.' : 'This snapshot has no stock check yet, so some deals may be discontinued or sold out; call the store before you drive.'} Opening a product link switches your selected store on canadiantire.ca to that store. Items with several sizes, colours or vehicle parts may be discounted for one option only; if the product page shows a price range, choose the option to see its price. Anything 50% off or more at every Ontario store is left out. "Regular" is the was-price the site shows for that store. Product photos load directly from Canadian Tire's image servers and belong to Canadian Tire and its brands. Independent tool, not affiliated with Canadian Tire.`;
+    const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span><span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> Ontario stores checked</span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices, stock and photos come from canadiantire.ca for all ${D.storeCount} Ontario stores, scanned ${esc(when.toLocaleString('en-CA'))}. Only deals a store reported as in stock and still on sale are shown, and anything 50% off or more at every Ontario store is left out. Stock changes quickly, so call the store before you drive. Opening a deal switches your selected store on canadiantire.ca to that store. Items with several sizes or colours may be discounted for one option only: choose the option on the product page to see its price. Product photos load from Canadian Tire's image servers and belong to Canadian Tire and its brands. This is an independent tool and is not affiliated with Canadian Tire.`;
   }
 
   function wire() {
@@ -339,15 +385,26 @@ footer { padding: 0 24px 30px; color: var(--muted); font-size: .85rem; max-width
     $('sort').addEventListener('change', e => set('sort', e.target.value));
     $('cats').addEventListener('click', e => { const b = e.target.closest('button[data-cat]'); if (b) set('cat', +b.dataset.cat); });
     $('more').addEventListener('click', () => { shown += PAGE; render(false); });
+    $('list').addEventListener('click', e => { const b = e.target.closest('button[data-stores]'); if (b) openStores(+b.dataset.stores); });
+    $('dclose').addEventListener('click', () => $('dlg').close());
+    $('list').addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG') { const box = t.parentNode; if (box) box.classList.add('none'); t.remove(); } }, true);
+    const dlg = $('dlg');
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      dlg.addEventListener('click', e => {
+        if (e.target !== dlg) return;
+        const r = dlg.getBoundingClientRect();
+        if (e.clientY < r.top || e.clientY > r.bottom || e.clientX < r.left || e.clientX > r.right) dlg.close();
+      });
+    }
     if (!(state.store >= -1 && state.store < STORES.length)) state.store = -1;
-    $('store').value = String(state.store); $('radius').value = String(state.radius); $('maxn').value = String(state.maxn); if (![50, 60, 70, 80, 90].includes(state.minpct)) state.minpct = 50; $('minpct').value = String(state.minpct); $('sort').value = state.sort;
+    if (![50, 60, 70, 80, 90].includes(state.minpct)) state.minpct = 50;
+    $('store').value = String(state.store); $('radius').value = String(state.radius); $('maxn').value = String(state.maxn); $('minpct').value = String(state.minpct); $('sort').value = state.sort;
   }
 
   fetch('data/deals.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(data => { prepare(data); storeOpts(); wire(); tiles(); render(true); })
-    .catch(err => { $('sub').textContent = 'The deal data could not load (' + err.message + '). Reload the page to try again.'; });
+    .then(data => { prepare(data); storeOpts(); wire(); summary(); render(true); })
+    .catch(err => { $('stats').textContent = 'The deals could not load (' + err.message + '). Reload the page to try again.'; });
 })();
-  document.getElementById('list').addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG') { const box = t.parentNode; if (box) box.classList.add('none'); t.remove(); } }, true);
 </script>
 </body>
 </html>
