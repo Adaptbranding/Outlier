@@ -9,3 +9,14 @@ Run by the scheduled task "CT Ontario clearance refresh" (6:34 am ET) in the own
 5. Stage that file from the Downloads folder, run `python3 -I refresh/build_data.py <raw.json> data/canadian-tire/deals.json`.
 6. Checks before pushing: stores >= 195, items >= 300, dropped.bad_url == 0, with_stock_count > 0, with_image >= 90% of items.
 7. Commit only `data/canadian-tire/deals.json` and push to `main`. GitHub Pages redeploys on its own.
+
+## Home Hardware (second retailer)
+
+Run in the same scheduled task, after Canadian Tire is pushed. Same rules: only the site's own requests, one at a time, 350 ms pause.
+
+1. Open https://www.homehardware.ca/en/liquidation/c/13993 in a new Chrome tab. If a cookie banner shows, choose "Reject Non-Essential". Do not change the selected store.
+2. Paste and run `refresh/hh_scan.js`. It crawls every Ontario store from the store locator, reads the Online Clearance list (about 200 items), then asks for price and stock at each store (about 15-20 minutes). Poll with `JSON.stringify({phase:__HH.phase,done:__HH.done,total:__HH.total,errs:__HH.errs.length,aborted:__HH.aborted,finished:__HH.finished})`.
+3. When `finished` is true: `window.__hhDownload(window.__hhExport(), 'hh-ontario-outliers-' + new Date().toISOString().slice(0,10) + '.json')`.
+4. Stage that file from the Downloads folder, run `python3 -I refresh/build_data.py <raw.json> data/home-hardware/deals.json hh`.
+5. Checks before pushing: stores >= 300, items >= 20, dropped.bad_url == 0, with_image >= 90% of items, errs in the browser == 0 (or only a handful).
+6. Commit only `data/home-hardware/deals.json` and push to `main`.

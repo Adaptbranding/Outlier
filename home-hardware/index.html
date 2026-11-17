@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home Hardware outlier deals in Ontario | Outlier</title>
+<meta name="description" content="Home Hardware clearance 50% off or more at only some Ontario stores, with price, stock and photos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand-link" href="../"><i aria-hidden="true"></i>Outlier</a>
+    <nav class="menu" id="menu" aria-label="Stores"></nav>
+  </div>
+</header>
+<script src="../assets/nav.js" data-base="../" data-here="home-hardware" defer></script>
+
+<header class="wrap hero">
+  <h1>Home Hardware outliers</h1>
+  <p>Online clearance at 50% off or more when you shop from some Ontario stores, but not from all of them.</p>
+  <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
+</header>
+
+<section class="controls" aria-label="Filters">
+  <div class="wrap">
+    <div class="row">
+      <label class="search">
+        <span class="sr" hidden>Search</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search deals" autocomplete="off" aria-label="Search products, brands or SKUs">
+      </label>
+      <div class="sel labeled cat"><span class="tag">Category</span><select id="cat" aria-label="Category"></select></div>
+      <div class="sel labeled"><span class="tag">Near store</span><select id="store" aria-label="Near store"><option value="-1">Any store</option></select></div>
+      <div class="sel labeled"><span class="tag">Distance</span><select id="radius" aria-label="Distance from the selected store">
+        <option value="0">This store only</option>
+        <option value="25">25 km</option>
+        <option value="50" selected>50 km</option>
+        <option value="100">100 km</option>
+        <option value="200">200 km</option>
+        <option value="-1">Anywhere</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Stores with deal</span><select id="maxn" aria-label="How many stores have the deal">
+        <option value="0" selected>Any</option>
+        <option value="1">Only 1 store</option>
+        <option value="3">3 or fewer</option>
+        <option value="5">5 or fewer</option>
+        <option value="10">10 or fewer</option>
+        <option value="25">25 or fewer</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Discount</span><select id="minpct" aria-label="Minimum discount">
+        <option value="50" selected>50% or more</option>
+        <option value="60">60% or more</option>
+        <option value="70">70% or more</option>
+        <option value="80">80% or more</option>
+        <option value="90">90% or more</option>
+      </select></div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="status">
+    <span id="count" aria-live="polite"></span>
+    <div class="sel labeled"><span class="tag">Sort</span><select id="sort" aria-label="Sort by">
+      <option value="save">Biggest $ saving</option>
+      <option value="pct">Biggest % off</option>
+      <option value="rare">Fewest stores</option>
+      <option value="low">Lowest price</option>
+      <option value="stock">Most in stock</option>
+      <option value="dist">Closest store</option>
+    </select></div>
+  </div>
+  <div class="grid" id="list"></div>
+  <button class="more" id="more" type="button" hidden>Show more</button>
+  <footer>
+    <details>
+      <summary>About this data</summary>
+      <p id="foot"></p>
+    </details>
+  </footer>
+</main>
+
+<dialog id="dlg" closedby="any" aria-labelledby="dtitle">
+  <div class="dhead">
+    <div><h3 id="dtitle"></h3><p id="dsub"></p></div>
+    <button class="x" type="button" id="dclose" aria-label="Close">×</button>
+  </div>
+  <ul class="stores" id="dlist"></ul>
+</dialog>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => n == null ? '' : '$' + n.toFixed(2);
+  const offLabel = (d) => Math.max(50, Math.floor(d.raw * 100 + 0.05)) + '%';
+  const stockTxt = (d) => d.q > 0 ? d.q + ' in store' : d.w > 0 ? 'ships to store' : 'stock not checked';
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const PAGE = 48;
+  let D = null, ITEMS = [], STORES = [], shown = PAGE, current = [], DIST = null;
+  const state = { q: '', cat: -1, store: -1, radius: 50, maxn: 0, minpct: 50, sort: 'save' };
+
+  try { const saved = JSON.parse(localStorage.getItem('hhOutlierFilters1') || 'null'); if (saved) Object.assign(state, saved, { q: '' }); } catch (e) {}
+  function persist() { try { localStorage.setItem('hhOutlierFilters1', JSON.stringify({ store: state.store, radius: state.radius, maxn: state.maxn, minpct: state.minpct, sort: state.sort })); } catch (e) {} }
+
+  function km(a, b) {
+    if (a[3] == null || b[3] == null) return Infinity;
+    const R = 6371, toR = Math.PI / 180;
+    const dLat = (b[3] - a[3]) * toR, dLng = (b[4] - a[4]) * toR;
+    const s = Math.sin(dLat / 2) ** 2 + Math.cos(a[3] * toR) * Math.cos(b[3] * toR) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+
+  function imgUrl(v) {
+    if (typeof v !== 'string' || !v) return '';
+    if (/^https:\/\/homehardware\.sirv\.com\/products\/\d+\/\d+\.view$/.test(v)) return v + '?thumb=image&w=400&q=75';
+    return '';
+  }
+
+  function prepare(data) {
+    D = data; STORES = data.stores;
+    ITEMS = data.items.map(r => {
+      const deals = r[7].map(d => {
+        const raw = d[3] ? 1 - d[1] / d[3] : 0;
+        const q = typeof d[4] === 'number' && d[4] >= 0 ? d[4] : 0;
+        const w = typeof d[5] === 'number' && d[5] >= 0 ? d[5] : 0;
+        return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, w, raw, pct: Math.round(raw * 1000) / 10 };
+      });
+      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', sku: r[4] || '', cats: r[5], multi: !!r[6], img: imgUrl(r[8]), deals, n: deals.length, hay: (r[1] + ' ' + (r[3] || '') + ' ' + (r[4] || '') + ' ' + r[0]).toLowerCase() };
+    });
+  }
+
+  function storeOpts() {
+    const sorted = STORES.map((s, i) => [s[1], i]).sort((a, b) => a[0].localeCompare(b[0]));
+    $('store').insertAdjacentHTML('beforeend', sorted.map(([name, i]) => `<option value="${i}">${esc(name)}</option>`).join(''));
+  }
+
+  function compute() {
+    const terms = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const home = state.store >= 0 ? STORES[state.store] : null;
+    const dist = home ? STORES.map(s => km(home, s)) : null;
+    const catCounts = new Array(D.cats.length).fill(0);
+    let allCount = 0;
+    const out = [];
+    for (const it of ITEMS) {
+      if (state.maxn && it.n > state.maxn) continue;
+      if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
+      let vis = it.deals.filter(d => d.raw * 100 >= state.minpct - 0.05);
+      if (home) {
+        if (state.radius === 0) vis = vis.filter(d => d.s === state.store);
+        else if (state.radius > 0) vis = vis.filter(d => dist[d.s] <= state.radius);
+      }
+      if (!vis.length) continue;
+      it.cats.forEach(c => catCounts[c]++);
+      allCount++;
+      if (state.cat >= 0 && !it.cats.includes(state.cat)) continue;
+      let best = vis[0];
+      for (const d of vis) if (d.pct > best.pct || (d.pct === best.pct && d.sale < best.sale)) best = d;
+      let near = null;
+      if (dist) near = vis.reduce((m, d) => dist[d.s] < dist[m.s] ? d : m, vis[0]);
+      out.push({ it, vis, best, near, nd: near ? dist[near.s] : null });
+    }
+    const by = {
+      pct: (a, b) => b.best.pct - a.best.pct || a.it.n - b.it.n,
+      rare: (a, b) => a.it.n - b.it.n || b.best.pct - a.best.pct,
+      save: (a, b) => (b.best.orig - b.best.sale) - (a.best.orig - a.best.sale),
+      low: (a, b) => a.best.sale - b.best.sale,
+      stock: (a, b) => (b.best.q ?? -1) - (a.best.q ?? -1) || b.best.pct - a.best.pct,
+      dist: (a, b) => (a.nd ?? 1e9) - (b.nd ?? 1e9) || b.best.pct - a.best.pct
+    };
+    out.sort(by[state.sort] || by.save);
+    return { out, catCounts, allCount, dist };
+  }
+
+  function renderCats(counts, total) {
+    const order = D.cats.map((c, i) => i).sort((x, y) => counts[y] - counts[x]);
+    const opt = (i, label, n) => `<option value="${i}"${state.cat === i ? ' selected' : ''}>${esc(label)} (${n.toLocaleString()})</option>`;
+    $('cat').innerHTML = `<option value="-1"${state.cat === -1 ? ' selected' : ''}>All categories</option>` + order.filter(i => counts[i] > 0 || state.cat === i).map(i => opt(i, D.cats[i], counts[i])).join('');
+  }
+
+  const storeName = (i) => STORES[i] ? STORES[i][1] : 'Store ' + i;
+  const storeUrl = (it, s) => 'https://www.homehardware.ca' + it.url;
+
+  function card(r, idx, dist) {
+    const { it, vis, best } = r;
+    const lead = r.near && state.sort === 'dist' ? r.near : best;
+    const url = storeUrl(it, lead.s);
+    const km1 = (d) => dist ? ' · ' + Math.round(dist[d.s]) + ' km' : '';
+    const rare = it.n === 1 ? 'Only 1 store' : it.n <= 5 ? it.n + ' stores' : '';
+    const media = it.img
+      ? `<a class="media" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer"><span class="pct">${offLabel(best)} off</span>${rare ? `<span class="rare">${rare}</span>` : ''}</a>`
+      : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><span class="pct">${offLabel(best)} off</span>${rare ? `<span class="rare">${rare}</span>` : ''}</a>`;
+    const where = vis.length === 1
+      ? `<b>${esc(storeName(vis[0].s))}</b>${km1(vis[0])} · ${stockTxt(vis[0])}`
+      : `Best at <b>${esc(storeName(best.s))}</b>${km1(best)} · ${stockTxt(best)}`;
+    const more = vis.length > 1 ? `<button type="button" class="btn ghost" data-stores="${idx}">All ${vis.length} stores</button>` : '';
+    return `<article class="card">${media}
+      <div class="body">
+        <p class="brand">${esc(it.brand)}</p>
+        <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
+        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong><s>${fmt(best.orig)}</s></p>
+        <p class="where">${where}</p>
+        <div class="actions"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View deal</a>${more}</div>
+      </div></article>`;
+  }
+
+  function render(resetPage) {
+    if (!D) return;
+    if (resetPage) shown = PAGE;
+    const { out, catCounts, allCount, dist } = compute();
+    current = out; DIST = dist;
+    renderCats(catCounts, allCount);
+    $('radius').disabled = state.store < 0;
+    $('count').innerHTML = `<b>${out.length.toLocaleString()}</b> deal${out.length === 1 ? '' : 's'}`;
+    $('list').innerHTML = out.length
+      ? out.slice(0, shown).map((r, i) => card(r, i, dist)).join('')
+      : '<div class="empty" style="grid-column:1/-1"><b>No deals match</b>Try a wider distance, a lower discount, or "Any" stores.</div>';
+    const more = $('more');
+    more.hidden = out.length <= shown;
+    more.textContent = `Show ${Math.min(PAGE, out.length - shown)} more`;
+  }
+
+  function openStores(i) {
+    const r = current[i]; if (!r) return;
+    const { it, vis } = r;
+    const listed = [...vis].sort((a, b) => DIST ? DIST[a.s] - DIST[b.s] : a.sale - b.sale);
+    $('dtitle').textContent = it.title;
+    $('dsub').textContent = `${vis.length} store${vis.length === 1 ? '' : 's'} with this discount${vis.length !== it.n ? ` (${it.n} in Ontario in total)` : ''}`;
+    $('dlist').innerHTML = listed.map(d => `<li>
+      <span class="nm">${esc(storeName(d.s))}${DIST ? ' · ' + Math.round(DIST[d.s]) + ' km' : ''}</span>
+      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}<s>${fmt(d.orig)}</s></span>
+      <span class="ad">${esc(STORES[d.s] ? STORES[d.s][2] : '')}</span>
+      <span class="st">${offLabel(d)} off · ${stockTxt(d)}</span>
+      <a class="go" href="${esc(storeUrl(it, d.s))}" target="_blank" rel="noopener">Open at this store</a></li>`).join('');
+    $('dlg').showModal();
+    $('dlg').scrollTop = 0;
+  }
+
+  function summary() {
+    const one = ITEMS.filter(i => i.n === 1).length;
+    const when = new Date(D.generated);
+    const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span><span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> Ontario stores checked</span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices, stock and photos come from homehardware.ca for all ${D.storeCount} Ontario stores, scanned ${esc(when.toLocaleString('en-CA'))}. Each price is the online clearance price when that store is your selected store on homehardware.ca; online clearance pricing is not a promise of the in-store shelf price. A deal counts only if the item is in stock at the store or can be shipped to it, and anything 50% off or more at every Ontario store is left out. Stock changes quickly. Open the product page, then pick the store shown here as your store to see the same price. Product photos load from Home Hardware's image servers and belong to Home Hardware and its brands. This is an independent tool and is not affiliated with Home Hardware.`;
+  }
+
+  function wire() {
+    const set = (k, v) => { state[k] = v; persist(); render(true); };
+    let t = null;
+    $('q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => set('q', e.target.value), 150); });
+    $('store').addEventListener('change', e => set('store', +e.target.value));
+    $('radius').addEventListener('change', e => set('radius', +e.target.value));
+    $('maxn').addEventListener('change', e => set('maxn', +e.target.value));
+    $('minpct').addEventListener('change', e => set('minpct', +e.target.value));
+    $('sort').addEventListener('change', e => set('sort', e.target.value));
+    $('cat').addEventListener('change', e => set('cat', +e.target.value));
+    $('more').addEventListener('click', () => { shown += PAGE; render(false); });
+    $('list').addEventListener('click', e => { const b = e.target.closest('button[data-stores]'); if (b) openStores(+b.dataset.stores); });
+    $('dclose').addEventListener('click', () => $('dlg').close());
+    $('list').addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG') { const box = t.parentNode; if (box) box.classList.add('none'); t.remove(); } }, true);
+    const dlg = $('dlg');
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      dlg.addEventListener('click', e => {
+        if (e.target !== dlg) return;
+        const r = dlg.getBoundingClientRect();
+        if (e.clientY < r.top || e.clientY > r.bottom || e.clientX < r.left || e.clientX > r.right) dlg.close();
+      });
+    }
+    if (!(state.store >= -1 && state.store < STORES.length)) state.store = -1;
+    if (![50, 60, 70, 80, 90].includes(state.minpct)) state.minpct = 50;
+    $('store').value = String(state.store); $('radius').value = String(state.radius); $('maxn').value = String(state.maxn); $('minpct').value = String(state.minpct); $('sort').value = state.sort;
+  }
+
+  fetch('../data/home-hardware/deals.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(data => { prepare(data); storeOpts(); wire(); summary(); render(true); })
+    .catch(err => { $('stats').textContent = 'The deals could not load (' + err.message + '). Reload the page to try again.'; });
+})();
+</script>
+</body>
+</html>

@@ -7,6 +7,14 @@
       "logo": null,
       "tagline": "Ontario stores \u00b7 50% off or more",
       "live": true
+    },
+    {
+      "id": "home-hardware",
+      "name": "Home Hardware",
+      "path": "home-hardware/",
+      "logo": null,
+      "tagline": "Ontario stores \u00b7 online clearance 50% off or more",
+      "live": true
     }
   ]
 }

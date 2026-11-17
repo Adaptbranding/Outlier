@@ -1,6 +1,7 @@
 import json, re, sys, math
 
 raw_path, out_path = sys.argv[1], sys.argv[2]
+retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default) or "hh"
 with open(raw_path, encoding="utf-8") as f:
     raw = json.load(f)
 
@@ -25,9 +26,21 @@ for st in raw["stores"]:
     stores.append([sid, s(name, 80), s(addr, 200), lat, lng])
 
 cats = [s(c, 60) for c in raw["cats"]]
+cat_remap = None
+if retailer == "hh":
+    # Home Hardware's category paths look like "New LBM &HARDLINES/Kitchen/Food Preparation": use the department (second part).
+    for st in stores:
+        st[2] = re.sub(r"^N/A,\s*", "", st[2])
+    dept = [(c.split("/")[1].strip() if c.count("/") >= 1 and c.split("/")[1].strip() else "Other") for c in cats]
+    cats = sorted(set(dept))
+    cat_remap = [cats.index(d) for d in dept]
 nstores = len(stores)
-path_re = re.compile(r"^/en/pdp/[a-z0-9\-]+\.html$")
-img_re = re.compile(r"^(product/[A-Za-z0-9/_.\-]+|https://media-www\.(canadiantire|partycity)\.ca/[A-Za-z0-9/_.\-]+)$")
+if retailer == "hh":
+    path_re = re.compile(r"^/en/[a-z0-9\-]+/p/\d+$")
+    img_re = re.compile(r"^https://homehardware\.sirv\.com/products/\d+/\d+\.view$")
+else:
+    path_re = re.compile(r"^/en/pdp/[a-z0-9\-]+\.html$")
+    img_re = re.compile(r"^(product/[A-Za-z0-9/_.\-]+|https://media-www\.(canadiantire|partycity)\.ca/[A-Za-z0-9/_.\-]+)$")
 
 items, dropped = [], {"bad_url": 0, "no_deals": 0, "all_stores": 0, "bad_price": 0}
 for it in raw["items"]:
@@ -48,17 +61,23 @@ for it in raw["items"]:
         if sale is None or orig is None or orig <= 0 or not (sale <= orig * 0.5 + 0.005):
             dropped["bad_price"] += 1
             continue
-        if qty == 0:
+        wq = d[5] if len(d) > 5 and isinstance(d[5], int) and not isinstance(d[5], bool) and 0 <= d[5] < 1000000 else None
+        if qty == 0 and not wq:
             dropped["no_stock"] = dropped.get("no_stock", 0) + 1
             continue
         seen.add(si)
-        clean.append([si, sale, sale_max if sale_max and sale_max != sale else None, orig, qty])
+        row = [si, sale, sale_max if sale_max and sale_max != sale else None, orig, qty]
+        if wq is not None:
+            row.append(wq)
+        clean.append(row)
     if not clean:
         dropped["no_deals"] += 1
         continue
     if len(clean) >= nstores:
         dropped["all_stores"] += 1
         continue
+    if cat_remap is not None:
+        cidx = [cat_remap[c] for c in cidx if isinstance(c, int) and 0 <= c < len(cat_remap)]
     cidx = sorted({c for c in cidx if isinstance(c, int) and 0 <= c < len(cats)})
     clean.sort(key=lambda d: d[1])
     items.append([s(code, 20), s(title), url, s(brand, 80), s(sku, 20), cidx, 1 if multi else 0, clean, img])
