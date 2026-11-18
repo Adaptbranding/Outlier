@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home Hardware outlier deals in Ontario | Outlier</title>
-<meta name="description" content="Home Hardware clearance 50% off or more at only some Ontario stores, with price, stock and photos.">
+<meta name="description" content="Home Hardware items 50% off or more at only some Ontario stores, with price, stock and photos.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 
 <header class="wrap hero">
   <h1>Home Hardware outliers</h1>
-  <p>Online clearance at 50% off or more when you shop from some Ontario stores, but not from all of them.</p>
+  <p>Items at 50% off or more when you shop from some Ontario stores, but not from all of them.</p>
   <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
 </header>
 
@@ -244,7 +244,7 @@
     const when = new Date(D.generated);
     const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
     $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span><span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> Ontario stores checked</span><span>Updated <b>${esc(day)}</b></span>`;
-    $('foot').innerHTML = `Prices, stock and photos come from homehardware.ca for all ${D.storeCount} Ontario stores, scanned ${esc(when.toLocaleString('en-CA'))}. Each price is the online clearance price when that store is your selected store on homehardware.ca; online clearance pricing is not a promise of the in-store shelf price. A deal counts only if the item is in stock at the store or can be shipped to it, and anything 50% off or more at every Ontario store is left out. Stock changes quickly. Open the product page, then pick the store shown here as your store to see the same price. Product photos load from Home Hardware's image servers and belong to Home Hardware and its brands. This is an independent tool and is not affiliated with Home Hardware.`;
+    $('foot').innerHTML = `Prices, stock and photos come from homehardware.ca for all ${D.storeCount} Ontario stores, scanned ${esc(when.toLocaleString('en-CA'))}. Each price is the online sale or clearance price when that store is your selected store on homehardware.ca; online pricing is not a promise of the in-store shelf price. A deal counts only if the item is in stock at the store or can be shipped to it, and anything 50% off or more at every Ontario store is left out. Stock changes quickly. Open the product page, then pick the store shown here as your store to see the same price. Product photos load from Home Hardware's image servers and belong to Home Hardware and its brands. This is an independent tool and is not affiliated with Home Hardware.`;
   }
 
   function wire() {
