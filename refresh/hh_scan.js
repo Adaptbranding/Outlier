@@ -1,6 +1,7 @@
-// Home Hardware Ontario clearance scan. Run in a homehardware.ca tab (any page). Starts a background job: window.__HH.
+// Home Hardware Ontario discount scan (all discounted items, not only clearance). Run in a homehardware.ca tab (any page). Starts a background job: window.__HH.
 // Uses only the site's own endpoints, one request at a time with a 350 ms pause:
 //   POST /_data/en/storeGeoFindFilter           (the store locator)
+//   GET  /_data/en/plp/category/13990/store/<id>  (the whole catalogue, plus the site's own on-sale filter)
 //   GET  /en/liquidation/c/13993                (the Online Clearance list)
 //   GET  /_data/en/product/bulk-product-data/<ids>/<store>,<warehouse>   (price + stock for that store)
 {
@@ -60,13 +61,51 @@ window.__hhDownload = function (obj, name) {
     .sort((a, b) => String(a.code).localeCompare(String(b.code)));
   R.storesOn = live.length;
 
-  // ---- Phase 2: the clearance list (store independent)
+  // ---- Phase 2: candidate products = everything discounted (not just clearance)
+  //  a) the whole catalogue (category 13990, 192 per page) read at one reference store: every item whose sale price is below its list price
+  //  b) the site's own "on sale" filter read at 8 stores spread across Ontario (catches discounts the reference store does not have)
+  //  c) the Online Clearance list
   R.phase = 'list';
+  const T = String.fromCharCode(126);
+  const plp = async (store, start, extra, sort) => {
+    const r = await req('/_data/en/plp/category/13990/store/' + store + '?sortBy=' + (sort || '') + '&pageSize=192&startIndex=' + start + '&availableInStore=false&excludeUnavailable=false' + (extra || ''), {}, 'plp');
+    await pause(350);
+    if (!r) return null;
+    try { return await r.json(); } catch (e) { return null; }
+  };
+  const cand = new Set();
+  const dropped = it => { const p = it.price || {}; return typeof p.salePrice === 'number' && typeof p.price === 'number' && p.price > 0 && p.salePrice < p.price; };
+  const ref = live[0].code;
+  R.catalogue = 0; R.catalogueTotal = 0; R.catalogueSeen = 0;
+  // The catalogue list holds about 48,800 distinct products (its totalCount says more, but paging past the end answers 400). Read it once, 192 per page.
+  const seenAll = new Set();
+  for (let start = 0; !R.aborted; start += 192) {
+    let j = await plp(ref, start, '', '');
+    if (!j && start > 0 && start < 40000) { await pause(3000); j = await plp(ref, start, '', ''); }
+    if (!j || !j.items || !j.items.length) { if (!j && start === 0) R.aborted = 'no catalogue'; break; }
+    R.catalogueTotal = j.totalCount || R.catalogueTotal;
+    for (const it of j.items) { R.catalogue++; seenAll.add(String(it.productCode)); if (dropped(it)) cand.add(String(it.productCode)); }
+    R.catalogueSeen = seenAll.size;
+    if (start > 120000) break;
+  }
+  if (!R.aborted && R.catalogueSeen < 40000) R.errs.push({ what: 'catalogue-coverage', status: R.catalogueSeen });
+  R.fromCatalogue = cand.size;
+  const spread = live.filter((s, i) => i % Math.max(1, Math.floor(live.length / 8)) === 0).slice(0, 8);
+  const flt = '&facetValueFilter=' + encodeURIComponent('tenant' + T + 'on-sale-ind:true');
+  for (const s of spread) {
+    for (let start = 0; !R.aborted && start < 2000; start += 192) {
+      const j = await plp(s.code, start, flt);
+      if (!j || !j.items || !j.items.length) break;
+      for (const it of j.items) if (dropped(it)) cand.add(String(it.productCode));
+    }
+  }
   const lr = await req('/en/liquidation/c/13993', {}, 'list');
   const html = lr ? await lr.text() : '';
-  const ids = [...new Set((html.match(/\/p\/(\d+)/g) || []).map(x => x.slice(3)))];
+  for (const x of (html.match(/\/p\/(\d+)/g) || [])) cand.add(x.slice(3));
+  const ids = [...cand];
   const img = {};
   for (const m of html.matchAll(/homehardware\.sirv\.com\/products\/(\d+)\/(\d+)\.view/g)) img[m[2]] = 'https://homehardware.sirv.com/products/' + m[1] + '/' + m[2] + '.view';
+  for (const c of ids) if (!img[c] && /^\d{7}$/.test(c)) img[c] = 'https://homehardware.sirv.com/products/' + c.slice(0, 4) + '/' + c + '.view';
   R.candidates = ids.length;
   if (!ids.length) R.aborted = 'no candidates';
 

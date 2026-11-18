@@ -15,7 +15,7 @@ Run by the scheduled task "CT Ontario clearance refresh" (6:34 am ET) in the own
 Run in the same scheduled task, after Canadian Tire is pushed. Same rules: only the site's own requests, one at a time, 350 ms pause.
 
 1. Open https://www.homehardware.ca/en/liquidation/c/13993 in a new Chrome tab. If a cookie banner shows, choose "Reject Non-Essential". Do not change the selected store.
-2. Paste and run `refresh/hh_scan.js`. It crawls every Ontario store from the store locator, reads the Online Clearance list (about 200 items), then asks for price and stock at each store (about 15-20 minutes). Poll with `JSON.stringify({phase:__HH.phase,done:__HH.done,total:__HH.total,errs:__HH.errs.length,aborted:__HH.aborted,finished:__HH.finished})`.
+2. Paste and run `refresh/hh_scan.js`. It crawls every Ontario store from the store locator, then builds the candidate list from every discounted item (the whole catalogue read at one store, about 340 pages of 192, plus the site's own on-sale filter at 8 spread-out stores, plus the Online Clearance list), then asks for price and stock at each store for those candidates (about 40-60 minutes in all). Poll with `JSON.stringify({phase:__HH.phase,done:__HH.done,total:__HH.total,errs:__HH.errs.length,aborted:__HH.aborted,finished:__HH.finished})`.
 3. When `finished` is true: `window.__hhDownload(window.__hhExport(), 'hh-ontario-outliers-' + new Date().toISOString().slice(0,10) + '.json')`.
 4. Stage that file from the Downloads folder, run `python3 -I refresh/build_data.py <raw.json> data/home-hardware/deals.json hh`.
 5. Checks before pushing: stores >= 300, items >= 20, dropped.bad_url == 0, with_image >= 90% of items, errs in the browser == 0 (or only a handful).
@@ -33,3 +33,14 @@ at that moment is incomplete, so drop it before exporting (the last session lost
 Export: `window.__raDownload(window.__raExport(), 'rona-ontario-outliers-YYYY-MM-DD.json')`, stage from Downloads,
 then `python3 -I refresh/build_data.py <raw.json> data/rona/deals.json ra`.
 Items at every scanned store are dropped by build_data.py (they are not outliers).
+
+Why RONA reads clearance only: rona.ca has no discount filter, so the other discounted items sit in the weekly-deals (flyer) lists
+(`RonaPromoFlyerView`, same department ids). Tested 2026-11-18 at 6 Ontario stores (Tools and Bathroom): 23 items were 50% off or more,
+and none had a different price from store to store (only the in-store stock differed). Each flyer page is about 3.3 MB and a store needs
+about 125 of them, roughly 45 GB for all 115 stores, so the flyer lists are not scanned.
+
+## Background tabs are throttled (all scans)
+
+Chrome slows a hidden tab to a crawl (a RONA scan managed 94 requests in 34 minutes). Right after pasting any scan script, paste `refresh/keepalive.js` in the same tab:
+it holds a local WebRTC data channel, which Chrome exempts from that throttling (the same scan then ran about 0.8 requests a second with nobody touching the tab).
+Check `window.__keepState` is `open`.
