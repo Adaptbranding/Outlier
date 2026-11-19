@@ -61,7 +61,7 @@ for it in raw["items"]:
         sale, sale_max, orig = money(sale), money(sale_max), money(orig)
         if not isinstance(si, int) or not (0 <= si < nstores) or si in seen:
             continue
-        if sale is None or orig is None or orig <= 0 or not (sale <= orig * 0.5 + 0.005):
+        if sale is None or orig is None or orig <= 0 or sale < 0.05 or not (sale <= orig * 0.5 + 0.005):  # sale < 0.05: $0.01 placeholder prices (seen on marks.com) are not real deals
             dropped["bad_price"] += 1
             continue
         wq = d[5] if len(d) > 5 and isinstance(d[5], int) and not isinstance(d[5], bool) and 0 <= d[5] < 1000000 else None

@@ -26,7 +26,7 @@
   const R = window.__R = { phase: 'stores', started: Date.now(), stores: null, codes: [], meta: {}, cat: {}, catList: [], screen: [], cand: null, perStore: {}, done: 0, total: 0, req: 0, errs: [], finished: false };
   const num = (p) => (p ? (p.value != null ? p.value : p.minPrice) : null);
   const numMax = (p) => (p ? (p.value != null ? p.value : (p.maxPrice != null ? p.maxPrice : p.minPrice)) : null);
-  window.__isDeep = (cur, orig) => cur != null && orig > 0 && cur <= orig * 0.5 + 0.005;
+  window.__isDeep = (cur, orig) => cur != null && cur >= 0.05 && orig > 0 && cur <= orig * 0.5 + 0.005; // marks.com shows $0.01 placeholder prices: not deals
 
   async function getJ(url, opts) {
     for (let a = 0; a < 4; a++) {
