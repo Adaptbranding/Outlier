@@ -92,8 +92,9 @@ selected store is restored when the job ends. It stops by itself on a 403/429/50
 unfinished stores are listed as incomplete and keep their previous deals.
 
 Once a day only: on 2026-11-19, after two full RONA scans plus tests in one day (several thousand requests within a few hours), rona.ca
-started answering every request with a 403 and a challenge page; one scan a day had run without trouble for three days. Do not run
-extra RONA scans on the same day, and never try to get past a challenge page (if one shows, the owner can clear it in their own browser).
+started answering every request with a 403 and a challenge page; one scan a day had run without trouble for three days. The block
+lifted on its own within about an hour and a half (a third scan then ran cleanly). Avoid extra RONA scans on the same day, and never try
+to get past a challenge page (if one shows, the owner can clear it in their own browser).
 
 Why RONA reads clearance only: rona.ca has no discount filter, so the other discounted items sit in the weekly-deals (flyer) lists
 (`RonaPromoFlyerView`, same department ids). Tested 2026-11-18 at 6 Ontario stores (Tools and Bathroom): 23 items were 50% off or more,
