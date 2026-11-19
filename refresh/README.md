@@ -39,6 +39,18 @@ Why RONA reads clearance only: rona.ca has no discount filter, so the other disc
 and none had a different price from store to store (only the in-store stock differed). Each flyer page is about 3.3 MB and a store needs
 about 125 of them, roughly 45 GB for all 115 stores, so the flyer lists are not scanned.
 
+## Mark's (fourth retailer)
+
+Same platform as Canadian Tire (marks.com). The sale lists show one price for every store, so store prices come from the per-store product lookup (`/api/v1/product/api/v1/product/productFamilyList?storeName=<id>`, up to 250 products per request). That lookup returns the option (size or colour) that is stocked at the store, so a product can look cheaper at one store because a discounted option is in stock there. That matches the "discounted for one option only" note on the page, and only options with stock at the store are kept.
+
+1. Open https://www.marks.com/en/sale-clearance/sale.html in a new Chrome tab. Do not change the selected store, and do not open marks.com in a second tab while the scan runs (the store choice is shared between tabs).
+2. Run `refresh/marks_hook.js`, then click "Goto Next Page" (page 2) and wait ~5 s. Confirm `!!window.__cap`.
+3. Run `refresh/marks_scan.js` (it also starts the keepalive). Phases: stores, catalogue (everything in sale-clearance, about 5,300 products), screen (whole catalogue at 6 spread-out stores; a product becomes a candidate if it is discounted at any of them), full (each candidate at every other Ontario store). About 2-3 hours. Poll with `JSON.stringify({phase:__R.phase,done:__R.done,total:__R.total,stores:__R.stores&&__R.stores.length,cat:__R.codes.length,cand:__R.cand&&__R.cand.length,errs:__R.errs.length,fatal:__R.fatal,finished:__R.finished})`.
+4. When finished: `window.__download(window.__buildExport(), 'marks-ontario-outliers-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')` (unique name), then `indexedDB.deleteDatabase('marksScan')`.
+5. Stage the file, run `python3 -I refresh/build_data.py <raw.json> data/marks/deals.json` (the `ct` rules fit Mark's: same `/en/pdp/...html` paths and `product/...` image paths).
+6. Checks before pushing: stores >= 120, items >= 50, dropped.bad_url == 0, with_stock_count > 0, with_image >= 90% of items.
+7. Commit only `data/marks/deals.json` and push to `main`.
+
 ## Background tabs are throttled (all scans)
 
 Chrome slows a hidden tab to a crawl (a RONA scan managed 94 requests in 34 minutes). Right after pasting any scan script, paste `refresh/keepalive.js` in the same tab:

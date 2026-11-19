@@ -23,6 +23,14 @@
       "logo": null,
       "tagline": "Ontario stores \u00b7 50% off or more",
       "live": true
+    },
+    {
+      "id": "marks",
+      "name": "Mark's",
+      "path": "marks/",
+      "logo": null,
+      "tagline": "Ontario stores \u00b7 50% off or more",
+      "live": true
     }
   ]
 }
