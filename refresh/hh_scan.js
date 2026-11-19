@@ -33,7 +33,9 @@ window.__hhDownload = function (obj, name) {
   const av = (s, k) => { const v = s.attributes && s.attributes[k]; return Array.isArray(v) ? v[0] : v; };
   const km = (a, b, c, d) => { const r = Math.PI / 180, x = (c - a) * r, y = (d - b) * r; const h = Math.sin(x / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(y / 2) ** 2; return 12742 * Math.asin(Math.sqrt(h)); };
 
-  // ---- Phase 1: every Ontario store (crawl: query at seeds, then at any store not within 2.5 km of a prior query)
+  // ---- Phase 1: every Ontario store (crawl: query at seeds, then at any store not within 2.5 km of a prior query, but only around a query that
+  // came back full). Each query returns every store within a fixed distance, up to the limit; asking for 200 instead of 50 means the seed grid
+  // covers almost everything (2026-11-19: the same 385 stores from 138 queries instead of 462).
   const stores = new Map(); const queried = []; const queue = [];
   for (let la = 42.0; la <= 46.0; la += 0.7) for (let lo = -83.2; lo <= -74.6; lo += 0.9) queue.push([la, lo]);
   for (let la = 46.6; la <= 50.0; la += 1.1) for (let lo = -95.0; lo <= -76.0; lo += 2.0) queue.push([la, lo]);
@@ -43,7 +45,7 @@ window.__hhDownload = function (obj, name) {
     const [la, lo] = queue.shift();
     if (queued_near(la, lo)) continue;
     queried.push([la, lo]); R.queries++;
-    const r = await req('/_data/en/storeGeoFindFilter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude: la, longitude: lo, limit: 50, storeType: '' }) }, 'stores');
+    const r = await req('/_data/en/storeGeoFindFilter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude: la, longitude: lo, limit: 200, storeType: '' }) }, 'stores');
     await pause(350);
     if (!r) continue;
     let j; try { j = await r.json(); } catch (e) { continue; }
@@ -52,7 +54,7 @@ window.__hhDownload = function (obj, name) {
       if (!s || !s.code || !s.geo || !s.address || s.address.stateOrProvince !== 'ON') continue;
       if (!stores.has(s.code)) {
         stores.set(s.code, s);
-        if (!queued_near(s.geo.lat, s.geo.lng)) queue.push([s.geo.lat, s.geo.lng]);
+        if (a.length >= 200 && !queued_near(s.geo.lat, s.geo.lng)) queue.push([s.geo.lat, s.geo.lng]);
       }
     }
     R.storesFound = stores.size; R.queueLeft = queue.length;
