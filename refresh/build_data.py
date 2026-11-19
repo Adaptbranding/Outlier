@@ -85,6 +85,70 @@ for it in raw["items"]:
     clean.sort(key=lambda d: d[1])
     items.append([s(code, 20), s(title), url, s(brand, 80), s(sku, 20), cidx, 1 if multi else 0, clean, img])
 
+# Stores the scan could not finish (listed in the export's "incomplete") keep their previous deals from the file being replaced,
+# and are listed in "stale" with the date of that data, so a failed store never silently shows as having no deals.
+def _sid(x):
+    if isinstance(x, bool):
+        return None
+    if isinstance(x, int):
+        return x
+    if isinstance(x, str) and x.isdigit():
+        return int(x)
+    return None
+
+incomplete = {i for i in (_sid(x) for x in (raw.get("incomplete") or [])) if i is not None}
+stale = {}
+if incomplete:
+    new_idx = {st[0]: i for i, st in enumerate(stores)}
+    inc_idx = {new_idx[sid] for sid in incomplete if sid in new_idx}
+    for it in items:
+        it[7] = [d for d in it[7] if d[0] not in inc_idx]
+    try:
+        with open(out_path, encoding="utf-8") as f:
+            prev = json.load(f)
+    except (OSError, ValueError):
+        prev = None
+    if prev:
+        prev_ids = [st[0] for st in prev.get("stores", [])]
+        prev_stale = prev.get("stale") or {}
+        by_code = {it[0]: it for it in items}
+        for pit in prev.get("items", []):
+            moved = []
+            for d in pit[7]:
+                if 0 <= d[0] < len(prev_ids) and prev_ids[d[0]] in incomplete and prev_ids[d[0]] in new_idx:
+                    moved.append([new_idx[prev_ids[d[0]]]] + list(d[1:]))
+            if not moved:
+                continue
+            it = by_code.get(pit[0])
+            if it is None:
+                cidx = []
+                for c in pit[5]:
+                    if 0 <= c < len(prev.get("cats", [])):
+                        name = prev["cats"][c]
+                        if name not in cats:
+                            cats.append(name)
+                        cidx.append(cats.index(name))
+                it = [pit[0], pit[1], pit[2], pit[3], pit[4], sorted(set(cidx)), pit[6], [], pit[8] if len(pit) > 8 else ""]
+                items.append(it)
+                by_code[pit[0]] = it
+            have = {d[0] for d in it[7]}
+            it[7].extend(d for d in moved if d[0] not in have)
+        for sid in incomplete:
+            if sid in new_idx:
+                stale[str(sid)] = prev_stale.get(str(sid), prev.get("generated")) if sid in prev_ids else None
+    else:
+        stale = {str(sid): None for sid in incomplete if sid in new_idx}
+    kept = []
+    for it in items:
+        if not it[7]:
+            dropped["no_deals"] += 1
+        elif len(it[7]) >= nstores:
+            dropped["all_stores"] += 1
+        else:
+            it[7].sort(key=lambda d: d[1])
+            kept.append(it)
+    items = kept
+
 out = {
     "generated": s(raw["generated"], 40),
     "storeCount": nstores,
@@ -92,6 +156,8 @@ out = {
     "cats": cats,
     "items": items,
 }
+if stale:
+    out["stale"] = stale
 with open(out_path, "w", encoding="utf-8") as f:
     json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 
@@ -103,4 +169,6 @@ print(json.dumps({"stores": nstores, "items": len(items), "pairs": pairs, "singl
                   "removed_in_browser": raw.get("dropped"),
                   "with_image": sum(1 for i in items if i[8]),
                   "with_stock_count": sum(1 for i in items for d in i[7] if d[4] is not None),
-                  "stores_scanned": raw.get("storesScanned")}, indent=1))
+                  "stores_scanned": raw.get("storesScanned"),
+                  "incomplete_stores": sorted(incomplete),
+                  "stale_stores": stale}, indent=1))

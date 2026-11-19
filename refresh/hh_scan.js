@@ -110,17 +110,21 @@ window.__hhDownload = function (obj, name) {
   if (!ids.length) R.aborted = 'no candidates';
 
   // ---- Phase 3: price + stock per store
-  R.phase = 'scan'; R.total = live.length;
+  // 200 products per request (the endpoint answers up to 200 items per call; 300 ids came back capped at 200, 500 gave a 400).
+  // Twice as many per request as before, at about the same time per request, so this phase takes about half as long.
+  R.phase = 'scan'; R.total = live.length; R.incomplete = [];
   const meta = {}; const deals = {};
-  const chunks = []; for (let i = 0; i < ids.length; i += 100) chunks.push(ids.slice(i, i + 100));
+  const chunks = []; for (let i = 0; i < ids.length; i += 200) chunks.push(ids.slice(i, i + 200));
   R.withAnySale = 0; R.sample = null;
-  for (let si = 0; si < live.length && !R.aborted; si++) {
-    const s = live[si]; const wh = av(s, 'tenantWarehouse') || '1';
+  const scanStore = async si => {
+    const s = live[si]; const wh = av(s, 'tenantWarehouse') || '1'; let ok = true;
+    for (const code in deals) deals[code] = deals[code].filter(d => d[0] !== si);  // a retry replaces the earlier partial result
     for (const ch of chunks) {
+      if (R.aborted) { ok = false; break; }
       const r = await req('/_data/en/product/bulk-product-data/' + ch.join(',') + '/' + s.code + ',' + wh, {}, 'bulk');
       await pause(350);
-      if (!r) continue;
-      let j; try { j = await r.json(); } catch (e) { continue; }
+      if (!r) { ok = false; continue; }
+      let j; try { j = await r.json(); } catch (e) { ok = false; continue; }
       for (const it of (j.items || [])) {
         const code = String(it.productCode); const p = it.price || {};
         if (!meta[code]) { const c = it.content || {}; meta[code] = { title: c.productName || '', slug: c.seoFriendlyUrl || '', brand: c.brandName || '', cat: c.category || '' }; }
@@ -134,8 +138,20 @@ window.__hhDownload = function (obj, name) {
         if (!R.sample) R.sample = { code, store: s.code, p: { price: p.price, sale: p.salePrice, list: p.effectivePricelistCode }, sq, wq, bz: it.buyability ? Object.keys(it.buyability).slice(0, 8) : null };
       }
     }
+    return ok;
+  };
+  for (let si = 0; si < live.length && !R.aborted; si++) {
+    if (!(await scanStore(si))) R.incomplete.push(si);
     R.done = si + 1;
   }
+  for (let si = R.done; si < live.length; si++) R.incomplete.push(si);  // never reached (stopped early)
+  // Retry pass: one more try for every store with a failed request.
+  if (R.incomplete.length && !R.aborted) {
+    R.phase = 'retry'; await pause(30000);
+    const again = R.incomplete.splice(0);
+    for (const si of again) if (R.aborted || !(await scanStore(si))) R.incomplete.push(si);
+  }
+  for (const code in deals) if (!deals[code].length) delete deals[code];
 
   // ---- Export
   const cats = [...new Set(Object.keys(deals).map(c => meta[c].cat))];
@@ -146,7 +162,8 @@ window.__hhDownload = function (obj, name) {
   window.__hhExport = () => ({
     generated: new Date().toISOString(),
     stores: live.map(s => [Number(s.code), s.name, [s.address.address1, s.address.cityOrTown, s.address.postalOrZipCode].filter(Boolean).join(', '), s.geo.lat, s.geo.lng]),
-    cats, items, candidates: ids.length, storesScanned: R.done
+    cats, items, candidates: ids.length, storesScanned: R.done,
+    incomplete: R.incomplete.map(si => Number(live[si].code))
   });
   R.items = items.length; R.finished = true; R.phase = 'done';
-})();
+})().catch(e => { const R = window.__HH; R.errs.push({ what: 'exception', status: String(e && e.message).slice(0, 80) }); R.aborted = R.aborted || 'exception'; R.finished = true; R.phase = 'done'; });
