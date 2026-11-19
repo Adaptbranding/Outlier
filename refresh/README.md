@@ -5,6 +5,9 @@ Every request is one the retailer's own site makes: one at a time per site with 
 
 ## Run all four at the same time
 
+(If your instructions run the retailers one after another instead, follow each retailer's own section below in turn: the Canadian Tire
+steps are in the "Canadian Tire" section, not these numbered steps. Everything else here still applies.)
+
 The four retailers are separate websites, so the four scans run side by side, one tab each. Each site still gets exactly the
 requests, at the pace, its own section describes; the refresh just takes as long as the slowest scan instead of all of them added
 together (three retailers one after another took about 5½ hours before 2026-11-19; Mark's, about 2-3 hours, is now the longest).
