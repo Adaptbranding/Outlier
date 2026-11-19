@@ -14,7 +14,7 @@ together (three retailers one after another took about 5½ hours before 2026-11-
 
 1. Open four tabs: Canadian Tire, Home Hardware, RONA and Mark's (URLs in each section below). Start each scan as its section says.
 2. Right after starting a scan, paste `refresh/keepalive.js` in the same tab and check `window.__keepState` is `open`
-   (Chrome throttles hidden tabs to a crawl; a page holding a WebRTC data channel is exempt). Do this in every tab (marks_scan.js starts its own).
+   (Chrome throttles hidden tabs to a crawl; a page holding a WebRTC data channel is exempt). Do this in every tab, Mark's included.
 3. Poll the tabs together (one short `javascript_tool` call per tab; each call must return within 45 s), then `sleep 290` in Bash, and repeat.
 4. As each scan finishes: export, stage the file from Downloads, build, check, commit only that retailer's data file,
    `git pull --rebase origin main`, push. Then carry on polling the others.
@@ -29,7 +29,8 @@ main session stages it. A retailer whose agent reports a block (403/429/503/chal
 
 ## Every store, every day
 
-- The Canadian Tire, Home Hardware and RONA scans retry, once at the end, any store that had a failed request, and lists the stores still incomplete in its export (`incomplete`).
+- The Canadian Tire, Home Hardware and RONA scans retry, once at the end, any store that had a failed request (Mark's retries the failed
+  request itself), and lists the stores still incomplete in its export (`incomplete`).
 - `build_data.py` keeps an incomplete store's deals from the file it replaces (so the store never shows up empty because of a failed request)
   and lists it under `stale` with the date of that data. It prints `incomplete_stores` and `stale_stores`: report both.
   A store that is stale two runs in a row needs a look.
@@ -107,7 +108,7 @@ Same platform as Canadian Tire (marks.com). The sale lists show one price for ev
 
 1. Open https://www.marks.com/en/sale-clearance/sale.html in a new Chrome tab. Do not change the selected store, and do not open marks.com in a second tab while the scan runs (the store choice is shared between tabs).
 2. Run `refresh/marks_hook.js`, then click "Goto Next Page" (page 2) and wait ~5 s. Confirm `!!window.__cap`.
-3. Run `refresh/marks_scan.js` (it also starts the keepalive). Phases: stores, catalogue (everything in sale-clearance, about 5,300 products), screen (whole catalogue at 6 spread-out stores; a product becomes a candidate if it is discounted at any of them), full (each candidate at every other Ontario store). About 2-3 hours. Poll with `JSON.stringify({phase:__R.phase,done:__R.done,total:__R.total,stores:__R.stores&&__R.stores.length,cat:__R.codes.length,cand:__R.cand&&__R.cand.length,errs:__R.errs.length,fatal:__R.fatal,finished:__R.finished})`.
+3. Run `refresh/marks_scan.js`, then paste `refresh/keepalive.js` in the same tab and check `window.__keepState` is `open`. Phases: stores, catalogue (everything in sale-clearance, about 5,300 products), screen (whole catalogue at 6 spread-out stores; a product becomes a candidate if it is discounted at any of them), full (each candidate at every other Ontario store). About 2-3 hours. Poll with `JSON.stringify({phase:__R.phase,done:__R.done,total:__R.total,stores:__R.stores&&__R.stores.length,cat:__R.codes.length,cand:__R.cand&&__R.cand.length,errs:__R.errs.length,fatal:__R.fatal,finished:__R.finished})`.
 4. When finished: `window.__download(window.__buildExport(), 'marks-ontario-outliers-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')` (unique name), then `indexedDB.deleteDatabase('marksScan')`.
 5. Stage the file, run `python3 -I refresh/build_data.py <raw.json> data/marks/deals.json` (the `ct` rules fit Mark's: same `/en/pdp/...html` paths and `product/...` image paths).
 6. Checks before pushing: stores >= 120, items >= 50, dropped.bad_url == 0, with_stock_count > 0, with_image >= 90% of items.

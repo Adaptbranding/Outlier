@@ -23,7 +23,7 @@
   const DH = Object.assign({}, base); delete DH.filters; delete DH.count; DH['Content-Type'] = 'application/json'; // detail lookups
   const SH = {}; for (const k of ['Accept', 'browse-mode', 'x-web-host', 'service-client', 'service-version', 'Ocp-Apim-Subscription-Key', 'baseSiteId', 'bannerid', 'lang']) if (base[k] != null) SH[k] = base[k];
 
-  const R = window.__R = { phase: 'stores', started: Date.now(), stores: null, codes: [], meta: {}, cat: {}, catList: [], screen: [], cand: null, perStore: {}, done: 0, total: 0, req: 0, errs: [], finished: false };
+  const R = window.__R = { incomplete: new Set(), phase: 'stores', started: Date.now(), stores: null, codes: [], meta: {}, cat: {}, catList: [], screen: [], cand: null, perStore: {}, done: 0, total: 0, req: 0, errs: [], finished: false };
   const num = (p) => (p ? (p.value != null ? p.value : p.minPrice) : null);
   const numMax = (p) => (p ? (p.value != null ? p.value : (p.maxPrice != null ? p.maxPrice : p.minPrice)) : null);
   window.__isDeep = (cur, orig) => cur != null && cur >= 0.05 && orig > 0 && cur <= orig * 0.5 + 0.005; // marks.com shows $0.01 placeholder prices: not deals
@@ -52,9 +52,18 @@
   }
 
   // Look up `codes` at one store; fills R.perStore[sid][code] = [code, cur, curMax, orig, qty, sellable]
+  // An answer with no products for a batch of candidates is treated as a failure (2026-11-19: at 4 of 140 stores one batch of 250 came
+  // back empty with no error, silently dropping that store's deals in it). It is retried once; a store that still fails is listed in
+  // R.incomplete, exported as `incomplete`, and build_data.py keeps that store's previous deals (marked stale) instead.
   async function lookup(sid, codes) {
-    const d = await getJ(detailUrl(sid), { method: 'POST', headers: DH, body: JSON.stringify({ productCodes: codes }), credentials: 'include' });
-    if (!d || !d.products) { R.errs.push({ s: 'nodata', sid }); return; }
+    let d = null;
+    for (let t = 0; t < 2; t++) {
+      d = await getJ(detailUrl(sid), { method: 'POST', headers: DH, body: JSON.stringify({ productCodes: codes }), credentials: 'include' });
+      if (d && d.products && (d.products.length || !codes.length)) break;
+      R.errs.push({ s: d && d.products ? 'empty' : 'nodata', sid, t });
+      d = null; await sleep(3000);
+    }
+    if (!d) { R.incomplete.add(sid); return; }
     const m = R.perStore[sid] || (R.perStore[sid] = {});
     for (const p of d.products) {
       const cur = num(p.currentPrice), orig = num(p.originalPrice);
@@ -140,7 +149,7 @@
       if (!cats.length) cats.push(ci('Other'));
       items.push([code, p.t || '', p.u || '', p.b || '', p.sku || '', [...new Set(cats)], p.m ? 1 : 0, d.sort((a, b) => a[1] - b[1]), String(p.i || '').replace('https://media-www.marks.com/', '')]);
     }
-    return { generated: new Date(R.started).toISOString(), storeCount: ON.length, storesScanned: Object.keys(R.perStore).length, excludedAllStores: allStores, dropped: { discontinued: dropDisc, noStock: dropZero, unknown: dropUnk }, catalogue: R.codes.length, candidates: R.cand ? R.cand.length : 0, stores: ON.map((s) => [s.id, s.name, s.addr || '', s.lat, s.lng]), cats: catList, items };
+    return { generated: new Date(R.started).toISOString(), storeCount: ON.length, storesScanned: Object.keys(R.perStore).length, incomplete: [...R.incomplete].map(Number), excludedAllStores: allStores, dropped: { discontinued: dropDisc, noStock: dropZero, unknown: dropUnk }, catalogue: R.codes.length, candidates: R.cand ? R.cand.length : 0, stores: ON.map((s) => [s.id, s.name, s.addr || '', s.lat, s.lng]), cats: catList, items };
   };
   window.__download = function (obj, name) {
     const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });

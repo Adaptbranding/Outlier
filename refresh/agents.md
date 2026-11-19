@@ -53,6 +53,6 @@ the runbook's RONA one-liner (about an hour) and export with the runbook's RONA 
 ## Mark's
 
 Open https://www.marks.com/en/sale-clearance/sale.html in your tab. Paste refresh/marks_hook.js, find the "Goto Next Page" link (page 2)
-and click it, wait about 5 s, and confirm `!!window.__cap` is true. Paste refresh/marks_scan.js (it starts its own keepalive). Poll with the
+and click it, wait about 5 s, and confirm `!!window.__cap` is true. Paste refresh/marks_scan.js, then refresh/keepalive.js, and check `window.__keepState` is "open". Poll with the
 runbook's Mark's one-liner (2-3 hours; if `fatal` is set, stop and report it). Export with the runbook's Mark's step 4 (unique name), then
 run `indexedDB.deleteDatabase('marksScan')`.
