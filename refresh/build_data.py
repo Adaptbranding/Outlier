@@ -16,6 +16,23 @@ def money(v):
         return None
     return round(float(v), 2)
 
+# First-seen dates: each item keeps the day it first appeared in this retailer's file, so the site can show "new" deals.
+# The previous file at out_path is the source; with no previous file nothing is marked new (first-seen stays empty).
+_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+today = str(raw.get("generated") or "")[:10]
+prev_first, have_prev = {}, False
+try:
+    with open(out_path, encoding="utf-8") as f:
+        _p0 = json.load(f)
+    have_prev = True
+    _pgen = str(_p0.get("generated") or "")[:10]
+    for _pit in _p0.get("items", []):
+        _f = _pit[9] if len(_pit) > 9 and isinstance(_pit[9], str) and _DATE.match(_pit[9]) else ""
+        # Unknown first-seen (file from before tracking): the previous scan's day, unless that is today (a same-day rerun), then stay unknown.
+        prev_first[_pit[0]] = _f or (_pgen if _DATE.match(_pgen) and _pgen < today else "")
+except (OSError, ValueError, TypeError, IndexError):
+    pass
+
 stores = []
 for st in raw["stores"]:
     sid, name, addr, lat, lng = st
@@ -149,6 +166,10 @@ if incomplete:
             kept.append(it)
     items = kept
 
+# Row index 9 = first-seen date (YYYY-MM-DD) or "" when unknown. Items absent from the previous file are new today.
+for it in items:
+    it.append(prev_first.get(it[0], today if (have_prev and _DATE.match(today)) else ""))
+
 out = {
     "generated": s(raw["generated"], 40),
     "storeCount": nstores,
@@ -171,4 +192,5 @@ print(json.dumps({"stores": nstores, "items": len(items), "pairs": pairs, "singl
                   "with_stock_count": sum(1 for i in items for d in i[7] if d[4] is not None),
                   "stores_scanned": raw.get("storesScanned"),
                   "incomplete_stores": sorted(incomplete),
-                  "stale_stores": stale}, indent=1))
+                  "stale_stores": stale,
+                  "new_today": sum(1 for i in items if i[9] and i[9] == today)}, indent=1))

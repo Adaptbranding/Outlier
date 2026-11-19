@@ -56,3 +56,7 @@ Same platform as Canadian Tire (marks.com). The sale lists show one price for ev
 Chrome slows a hidden tab to a crawl (a RONA scan managed 94 requests in 34 minutes). Right after pasting any scan script, paste `refresh/keepalive.js` in the same tab:
 it holds a local WebRTC data channel, which Chrome exempts from that throttling (the same scan then ran about 0.8 requests a second with nobody touching the tab).
 Check `window.__keepState` is `open`.
+
+## New-deal tracking
+
+`build_data.py` keeps each item's first-seen date (row index 9, `YYYY-MM-DD`) by reading the file it is about to overwrite, so always build straight into `data/<retailer>/deals.json` (never a temp path, or every item loses its date and nothing shows as new). Items missing from the previous file get today's date; items from before tracking stay unknown (empty) until the next day. The site's "Show" filter and the search page's "New" badge use that date against each file's `generated` day.

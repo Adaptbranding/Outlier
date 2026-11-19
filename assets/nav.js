@@ -11,6 +11,7 @@
       const inner = x.logo ? `<img src="${esc(base + x.logo)}" alt="${esc(x.name)}" height="24">` : esc(x.name);
       return `<a href="${esc(base + x.path)}"${here === x.id ? ' aria-current="page"' : ''}>${inner}</a>`;
     }).join('');
-    menu.innerHTML = home + items;
+    const search = `<a href="${base}search/"${here === 'search' ? ' aria-current="page"' : ''}>Search all</a>`;
+    menu.innerHTML = home + items + search;
   }).catch(() => {});
 })();

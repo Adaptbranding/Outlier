@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search every store | Outlier</title>
+<meta name="description" content="One search across Canadian Tire, Home Hardware, RONA and Mark's: Ontario products at 50% off or more at only some stores, with the newest deals first.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand-link" href="../"><i aria-hidden="true"></i>Outlier</a>
+    <nav class="menu" id="menu" aria-label="Stores"></nav>
+  </div>
+</header>
+<script src="../assets/nav.js" data-base="../" data-here="search" defer></script>
+
+<header class="wrap hero">
+  <h1>Search every store</h1>
+  <p>One search across all the stores here. Find a product, brand or SKU at Canadian Tire, Home Hardware, RONA and Mark's, or switch on "New" to see what appeared in the latest update.</p>
+  <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
+</header>
+
+<section class="controls" aria-label="Filters">
+  <div class="wrap">
+    <div class="row">
+      <label class="search">
+        <span class="sr" hidden>Search</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search all stores: drill, jacket, DeWalt…" autocomplete="off" aria-label="Search products, brands or SKUs in every store">
+      </label>
+      <div class="sel labeled"><span class="tag">Show</span><select id="when" aria-label="Show only new deals">
+        <option value="0" selected>All deals</option>
+        <option value="1">New in latest update</option>
+        <option value="3">New in last 3 days</option>
+        <option value="7">New in last 7 days</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Stores with deal</span><select id="maxn" aria-label="How many stores have the deal">
+        <option value="0" selected>Any</option>
+        <option value="1">Only 1 store</option>
+        <option value="3">3 or fewer</option>
+        <option value="5">5 or fewer</option>
+        <option value="10">10 or fewer</option>
+        <option value="25">25 or fewer</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Discount</span><select id="minpct" aria-label="Minimum discount">
+        <option value="50" selected>50% or more</option>
+        <option value="60">60% or more</option>
+        <option value="70">70% or more</option>
+        <option value="80">80% or more</option>
+        <option value="90">90% or more</option>
+      </select></div>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Stores to search"></div>
+    <p class="loadnote" id="loadnote" aria-live="polite"></p>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="status">
+    <span id="count" aria-live="polite"></span>
+    <div class="sel labeled"><span class="tag">Sort</span><select id="sort" aria-label="Sort by">
+      <option value="save">Biggest $ saving</option>
+      <option value="new">Newest first</option>
+      <option value="pct">Biggest % off</option>
+      <option value="rare">Fewest stores</option>
+      <option value="low">Lowest price</option>
+    </select></div>
+  </div>
+  <div class="grid" id="list"></div>
+  <button class="more" id="more" type="button" hidden>Show more</button>
+  <footer>
+    <details>
+      <summary>About this data</summary>
+      <p id="foot"></p>
+    </details>
+  </footer>
+</main>
+
+<dialog id="dlg" closedby="any" aria-labelledby="dtitle">
+  <div class="dhead">
+    <div><h3 id="dtitle"></h3><p id="dsub"></p></div>
+    <button class="x" type="button" id="dclose" aria-label="Close">×</button>
+  </div>
+  <ul class="stores" id="dlist"></ul>
+</dialog>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => n == null ? '' : '$' + n.toFixed(2);
+  const offLabel = (d) => Math.max(50, Math.floor(d.raw * 100 + 0.05)) + '%';
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const PAGE = 48;
+
+  // Per-retailer differences: where the data is, how photos and product links are built, how a deal row reads.
+  const ctImg = (host, extra) => (v) => {
+    if (typeof v !== 'string' || !v) return '';
+    if (/^product\/[A-Za-z0-9\/_.\-]+$/.test(v)) return 'https://' + host + '/' + v + '?imwidth=400';
+    if (extra.test(v)) return v + '?imwidth=400';
+    return '';
+  };
+  const ctDeal = (d) => d.length > 4 ? (typeof d[4] === 'number' && d[4] >= 0 ? d[4] : null) : undefined;
+  const ctStock = (d) => d.q === undefined ? 'stock not checked' : d.q === null ? 'stock varies by option' : d.q + ' in stock';
+  const CFG = {
+    'canadian-tire': { data: 'data/canadian-tire/deals.json', site: 'https://www.canadiantire.ca', pad: true, kind: 'ct', stock: ctStock,
+      img: ctImg('media-www.canadiantire.ca', /^https:\/\/media-www\.(canadiantire|partycity)\.ca\/[A-Za-z0-9\/_.\-]+$/) },
+    'marks': { data: 'data/marks/deals.json', site: 'https://www.marks.com', pad: true, kind: 'ct', stock: ctStock,
+      img: ctImg('media-www.marks.com', /^https:\/\/media-www\.marks\.com\/[A-Za-z0-9\/_.\-]+$/) },
+    'home-hardware': { data: 'data/home-hardware/deals.json', site: 'https://www.homehardware.ca', pad: false, kind: 'hw',
+      stock: (d) => d.q > 0 ? d.q + ' in store' : d.w > 0 ? 'ships to store' : 'stock not checked',
+      img: (v) => /^https:\/\/homehardware\.sirv\.com\/products\/\d+\/\d+\.view$/.test(v) ? v + '?thumb=image&w=400&q=75' : '' },
+    'rona': { data: 'data/rona/deals.json', site: 'https://www.rona.ca', pad: false, kind: 'hw',
+      stock: (d) => d.q > 0 ? d.q + ' in store' : 'stock not checked',
+      img: (v) => /^https:\/\/cdn\.rona\.ca\/images\/[A-Za-z0-9_\-]+\.jpg$/.test(v) ? v : '' }
+  };
+
+  let RET = [], current = [], shown = PAGE;
+  const state = { q: '', when: 0, maxn: 0, minpct: 50, sort: 'save', on: new Set() };
+
+  const qs = new URLSearchParams(location.search);
+  state.q = (qs.get('q') || '').slice(0, 120);
+  if (qs.get('new') === '1') { state.when = 1; state.sort = 'new'; }
+
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (state.q.trim()) p.set('q', state.q.trim());
+    if (state.when === 1) p.set('new', '1');
+    try { history.replaceState(null, '', p.toString() ? '?' + p : location.pathname); } catch (e) {}
+  }
+
+  // "New" = first seen in a retailer's daily refresh (build_data.py stores the date in row[9]; empty = unknown, never new).
+  const latestDay = (r) => String(r.D && r.D.generated || '').slice(0, 10);
+  const isNew = (r, it) => !!it.first && it.first >= latestDay(r);
+  function sinceDate(r, n) {
+    if (!n) return '';
+    const t = new Date(latestDay(r) + 'T00:00:00Z');
+    if (isNaN(t)) return '';
+    t.setUTCDate(t.getUTCDate() - (n - 1));
+    return t.toISOString().slice(0, 10);
+  }
+
+  function prepare(r, data) {
+    r.D = data; r.stores = data.stores;
+    const kind = r.cfg.kind;
+    r.items = data.items.map(row => {
+      const deals = row[7].map(d => {
+        const raw = d[3] ? 1 - d[1] / d[3] : 0;
+        const o = { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], raw, pct: Math.round(raw * 1000) / 10 };
+        if (kind === 'ct') o.q = ctDeal(d);
+        else { o.q = typeof d[4] === 'number' && d[4] >= 0 ? d[4] : 0; o.w = typeof d[5] === 'number' && d[5] >= 0 ? d[5] : 0; }
+        return o;
+      });
+      return { code: row[0], title: row[1], url: row[2], brand: row[3] || '', sku: row[4] || '', multi: !!row[6], img: r.cfg.img(row[8]), deals,
+        first: typeof row[9] === 'string' ? row[9] : '', n: deals.length,
+        hay: (row[1] + ' ' + (row[3] || '') + ' ' + (row[4] || '') + ' ' + row[0]).toLowerCase() };
+    });
+  }
+
+  function compute() {
+    const terms = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const counts = {};
+    const out = [];
+    for (const r of RET) {
+      counts[r.id] = 0;
+      const since = sinceDate(r, state.when);
+      for (const it of r.items || []) {
+        if (state.maxn && it.n > state.maxn) continue;
+        if (since && !(it.first && it.first >= since)) continue;
+        if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
+        const vis = it.deals.filter(d => d.raw * 100 >= state.minpct - 0.05);
+        if (!vis.length) continue;
+        counts[r.id]++;
+        if (!state.on.has(r.id)) continue;
+        let best = vis[0];
+        for (const d of vis) if (d.pct > best.pct || (d.pct === best.pct && d.sale < best.sale)) best = d;
+        out.push({ r, it, vis, best });
+      }
+    }
+    const save = (a, b) => (b.best.orig - b.best.sale) - (a.best.orig - a.best.sale);
+    const by = {
+      save,
+      pct: (a, b) => b.best.pct - a.best.pct || a.it.n - b.it.n,
+      rare: (a, b) => a.it.n - b.it.n || b.best.pct - a.best.pct,
+      low: (a, b) => a.best.sale - b.best.sale,
+      new: (a, b) => (b.it.first || '').localeCompare(a.it.first || '') || save(a, b)
+    };
+    out.sort(by[state.sort] || save);
+    return { out, counts };
+  }
+
+  const storeName = (r, i) => r.stores[i] ? r.stores[i][1] : 'Store ' + i;
+  const storeUrl = (r, it, s) => r.cfg.site + it.url + (r.cfg.pad && r.stores[s] ? '?store=' + String(r.stores[s][0]).padStart(4, '0') : '');
+
+  function card(x, idx) {
+    const { r, it, vis, best } = x;
+    const url = storeUrl(r, it, best.s);
+    const rare = it.n === 1 ? 'Only 1 store' : it.n <= 5 ? it.n + ' stores' : '';
+    const fresh = isNew(r, it) ? '<span class="new">New</span>' : '';
+    const badges = `<span class="pct">${offLabel(best)} off</span>${fresh}${rare ? `<span class="rare">${rare}</span>` : ''}`;
+    const media = it.img
+      ? `<a class="media" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer">${badges}</a>`
+      : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">${badges}</a>`;
+    const where = vis.length === 1
+      ? `<b>${esc(storeName(r, vis[0].s))}</b> · ${r.cfg.stock(vis[0])}`
+      : `Best at <b>${esc(storeName(r, best.s))}</b> · ${r.cfg.stock(best)}`;
+    const more = vis.length > 1 ? `<button type="button" class="btn ghost" data-stores="${idx}">All ${vis.length} stores</button>` : '';
+    return `<article class="card">${media}
+      <div class="body">
+        <p class="brand"><span class="ret">${esc(r.name)}</span>${it.brand ? ' · ' + esc(it.brand) : ''}</p>
+        <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
+        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong><s>${fmt(best.orig)}</s></p>
+        <p class="where">${where}</p>
+        <div class="actions"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View deal</a>${more}</div>
+      </div></article>`;
+  }
+
+  function emptyHint() {
+    const loading = RET.some(r => r.state === 'loading');
+    if (loading) return 'Still loading the stores. Results will appear as they arrive.';
+    if (state.when) {
+      const tracked = RET.some(r => (r.items || []).some(i => i.first));
+      return tracked ? 'Nothing new matches these filters. Try a longer window, another word, or "All deals".'
+        : 'New-deal tracking starts with the next daily update, so nothing is marked new yet. Check back tomorrow.';
+    }
+    return 'Try another word, a lower discount, or turn more stores on.';
+  }
+
+  function render(resetPage) {
+    if (resetPage) shown = PAGE;
+    const { out, counts } = compute();
+    current = out;
+    RET.forEach(r => { const n = $('n-' + r.id); if (n) n.textContent = r.state === 'loading' ? '…' : r.state === 'error' ? '!' : counts[r.id].toLocaleString(); });
+    const stores = new Set(out.map(x => x.r.id)).size;
+    $('count').innerHTML = `<b>${out.length.toLocaleString()}</b> deal${out.length === 1 ? '' : 's'}${out.length ? ` from <b>${stores}</b> store${stores === 1 ? '' : 's'}` : ''}`;
+    $('list').innerHTML = out.length
+      ? out.slice(0, shown).map((x, i) => card(x, i)).join('')
+      : '<div class="empty" style="grid-column:1/-1"><b>No deals match</b>' + emptyHint() + '</div>';
+    const more = $('more');
+    more.hidden = out.length <= shown;
+    more.textContent = `Show ${Math.min(PAGE, out.length - shown)} more`;
+  }
+
+  function note() {
+    const loading = RET.filter(r => r.state === 'loading').map(r => r.name);
+    const failed = RET.filter(r => r.state === 'error').map(r => r.name);
+    $('loadnote').textContent = (loading.length ? 'Loading ' + loading.join(', ') + '…' : '') + (failed.length ? (loading.length ? ' ' : '') + failed.join(', ') + ' could not load. Reload the page to try again.' : '');
+  }
+
+  function summary() {
+    const ok = RET.filter(r => r.state === 'ok');
+    const total = ok.reduce((n, r) => n + r.items.length, 0);
+    const tracked = ok.some(r => r.items.some(i => i.first));
+    const fresh = ok.reduce((n, r) => n + r.items.filter(i => isNew(r, i)).length, 0);
+    $('stats').innerHTML = `<span><b>${total.toLocaleString()}</b> deals</span>${tracked ? `<span><b>${fresh.toLocaleString()}</b> new in latest update</span>` : ''}<span><b>${ok.length}</b> of ${RET.length} stores loaded</span>`;
+    const fmtDay = (r) => { const d = new Date(r.D.generated); return isNaN(d) ? '' : d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }); };
+    $('foot').innerHTML = 'This page combines the daily scans of ' + ok.map(r => `<a href="../${esc(r.path)}">${esc(r.name)}</a> (updated ${esc(fmtDay(r))})`).join(', ') +
+      '. Each store page explains how its prices and stock are read. Only Ontario deals 50% off or more at some stores but not all are included. Stock changes quickly, so call the store before you drive. "New" means the deal was not in the previous daily update. Product photos load from each retailer\'s image servers and belong to that retailer and its brands. This is an independent tool and is not affiliated with any retailer.';
+  }
+
+  function openStores(i) {
+    const x = current[i]; if (!x) return;
+    const { r, it, vis } = x;
+    const listed = [...vis].sort((a, b) => a.sale - b.sale);
+    $('dtitle').textContent = it.title;
+    $('dsub').textContent = `${r.name} · ${vis.length} store${vis.length === 1 ? '' : 's'} with this discount${vis.length !== it.n ? ` (${it.n} in Ontario in total)` : ''}`;
+    $('dlist').innerHTML = listed.map(d => `<li>
+      <span class="nm">${esc(storeName(r, d.s))}</span>
+      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}<s>${fmt(d.orig)}</s></span>
+      <span class="ad">${esc(r.stores[d.s] ? r.stores[d.s][2] : '')}</span>
+      <span class="st">${offLabel(d)} off · ${esc(r.cfg.stock(d))}</span>
+      <a class="go" href="${esc(storeUrl(r, it, d.s))}" target="_blank" rel="noopener">Open at this store</a></li>`).join('');
+    $('dlg').showModal();
+    $('dlg').scrollTop = 0;
+  }
+
+  function wire() {
+    const set = (k, v) => { state[k] = v; syncUrl(); render(true); };
+    let t = null;
+    $('q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => set('q', e.target.value), 150); });
+    $('when').addEventListener('change', e => { state.when = +e.target.value; if (state.when && state.sort === 'save') state.sort = 'new'; else if (!state.when && state.sort === 'new') state.sort = 'save'; $('sort').value = state.sort; syncUrl(); render(true); });
+    $('maxn').addEventListener('change', e => set('maxn', +e.target.value));
+    $('minpct').addEventListener('change', e => set('minpct', +e.target.value));
+    $('sort').addEventListener('change', e => set('sort', e.target.value));
+    $('chips').addEventListener('change', e => {
+      const cb = e.target.closest('input[data-r]'); if (!cb) return;
+      if (cb.checked) state.on.add(cb.dataset.r); else state.on.delete(cb.dataset.r);
+      render(true);
+    });
+    $('more').addEventListener('click', () => { shown += PAGE; render(false); });
+    $('list').addEventListener('click', e => { const b = e.target.closest('button[data-stores]'); if (b) openStores(+b.dataset.stores); });
+    $('dclose').addEventListener('click', () => $('dlg').close());
+    $('list').addEventListener('error', e => { const t = e.target; if (t && t.tagName === 'IMG') { const box = t.parentNode; if (box) box.classList.add('none'); t.remove(); } }, true);
+    const dlg = $('dlg');
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      dlg.addEventListener('click', e => {
+        if (e.target !== dlg) return;
+        const b = dlg.getBoundingClientRect();
+        if (e.clientY < b.top || e.clientY > b.bottom || e.clientX < b.left || e.clientX > b.right) dlg.close();
+      });
+    }
+    $('q').value = state.q; $('when').value = String(state.when); $('sort').value = state.sort;
+  }
+
+  fetch('../retailers.json').then(r => r.json()).then(d => {
+    RET = d.retailers.filter(x => x.live && CFG[x.id]).map(x => ({ id: x.id, name: x.name, path: x.path, cfg: CFG[x.id], items: [], stores: [], state: 'loading' }));
+    RET.forEach(r => state.on.add(r.id));
+    $('chips').innerHTML = RET.map(r => `<label class="chip"><input type="checkbox" data-r="${esc(r.id)}" checked>${esc(r.name)} <small id="n-${esc(r.id)}">…</small></label>`).join('');
+    wire(); note(); render(true);
+    RET.forEach(r => {
+      fetch('../' + r.cfg.data).then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+        .then(data => { prepare(r, data); r.state = 'ok'; })
+        .catch(err => { r.state = 'error'; r.err = err.message; })
+        .then(() => { note(); summary(); render(true); });
+    });
+  }).catch(err => { $('stats').textContent = 'The store list could not load (' + err.message + '). Reload the page to try again.'; });
+})();
+</script>
+</body>
+</html>
