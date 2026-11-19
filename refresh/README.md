@@ -19,6 +19,14 @@ together (three retailers one after another took about 5½ hours before 2026-11-
 4. As each scan finishes: export, stage the file from Downloads, build, check, commit only that retailer's data file,
    `git pull --rebase origin main`, push. Then carry on polling the others.
 
+## With agents (how the scheduled task runs)
+
+The main session starts four agents at once, one per retailer, with the prompts in `refresh/agents.md` (COMMON block + that retailer's
+block, verbatim). Each agent opens its own tab, runs its scan, exports, stages the file and reports back; it does not touch git. The main
+session stays out of the browser and, as each report arrives, builds straight into `data/<retailer>/deals.json`, runs that retailer's checks,
+commits only that file, `git pull --rebase origin main` and pushes. If an agent could not stage its file it gives the file name and the
+main session stages it. A retailer whose agent reports a block (403/429/503/challenge) is not retried that day.
+
 ## Every store, every day
 
 - The Canadian Tire, Home Hardware and RONA scans retry, once at the end, any store that had a failed request, and lists the stores still incomplete in its export (`incomplete`).
