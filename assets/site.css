@@ -179,3 +179,5 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .home-links { margin-top: 12px; font-size: .92rem; }
 .home-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .home-links a:hover { text-decoration: underline; }
+
+[hidden] { display: none !important; }
