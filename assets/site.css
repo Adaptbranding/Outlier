@@ -181,3 +181,8 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .home-links a:hover { text-decoration: underline; }
 
 [hidden] { display: none !important; }
+
+/* Site-wide disclaimer */
+.legal { margin: 24px 0 0; padding: 26px 0 40px; border-top: 1px solid var(--line); font-size: .8rem; line-height: 1.55; color: var(--muted); }
+.legal p { margin: 0 0 10px; max-width: 90ch; }
+.legal strong { color: var(--ink); font-weight: 600; }
