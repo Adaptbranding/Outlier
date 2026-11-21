@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Amazon.ca name-brand deals at 50% off or more, items listed at $100 or more | Outlier</title>
-<meta name="description" content="Name-brand items on Amazon.ca at 50% off or more (coupons counted) with a list price of $100 or more: furniture, outdoor, camping, hunting, farm equipment, electronics and tools.">
+<title>Amazon.ca deals at 50% off or more, items listed at $100 or more | Outlier</title>
+<meta name="description" content="Items on Amazon.ca at 50% off or more (coupons counted) with a list price of $100 or more: furniture, outdoor, camping, hunting, farm equipment, electronics and tools.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 
 <header class="wrap hero">
   <h1>Amazon.ca outliers</h1>
-  <p>Name-brand items on Amazon.ca at 50% off or more, coupons counted, with a list price of $100 or more: furniture, outdoor and recreation, camping, hunting, farm equipment, electronics and tools.</p>
+  <p>Items on Amazon.ca at 50% off or more, coupons counted, with a list price of $100 or more, with name brands one click away: furniture, outdoor and recreation, camping, hunting, farm equipment, electronics and tools.</p>
   <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
 </header>
 
@@ -40,6 +40,10 @@
         <option value="70">70% or more</option>
         <option value="80">80% or more</option>
         <option value="90">90% or more</option>
+      </select></div>
+      <div class="sel labeled"><span class="tag">Brands</span><select id="brands" aria-label="Brands">
+        <option value="0" selected>All brands</option>
+        <option value="1">Name brands only</option>
       </select></div>
       <div class="sel labeled"><span class="tag">Show</span><select id="when" aria-label="Show only new deals">
         <option value="0" selected>All deals</option>
@@ -78,11 +82,11 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const PAGE = 48;
   let D = null, ITEMS = [], shown = PAGE;
-  const state = { q: '', cat: -1, minpct: 50, sort: 'save', when: 0 };
+  const state = { q: '', cat: -1, minpct: 50, sort: 'save', when: 0, brands: 0 };
 
   try { const saved = JSON.parse(localStorage.getItem('amOutlierFilters1') || 'null'); if (saved) Object.assign(state, saved, { q: '' }); } catch (e) {}
   if (/[?&]new=1(&|$)/.test(location.search)) state.when = 1;
-  function persist() { try { localStorage.setItem('amOutlierFilters1', JSON.stringify({ minpct: state.minpct, sort: state.sort })); } catch (e) {} }
+  function persist() { try { localStorage.setItem('amOutlierFilters1', JSON.stringify({ minpct: state.minpct, sort: state.sort, brands: state.brands })); } catch (e) {} }
 
   // Photos: the scan stores https://m.media-amazon.com/images/I/<id>.jpg; Amazon's size suffix gives a 400 px copy.
   function imgUrl(v) {
@@ -124,6 +128,7 @@
       if (since && !(it.first && it.first >= since)) continue;
       if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
       if (it.deal.raw * 100 < state.minpct - 0.05) continue;
+      if (state.brands && !it.brand) continue;
       it.cats.forEach(c => catCounts[c]++);
       allCount++;
       if (state.cat >= 0 && !it.cats.includes(state.cat)) continue;
@@ -183,8 +188,8 @@
     const when = new Date(D.generated);
     const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
     const fresh = ITEMS.some(i => i.first) ? `<span><b>${ITEMS.filter(isNew).length.toLocaleString()}</b> new in latest update</span>` : '';
-    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span>Name brands, listed at <b>$100 or more</b></span><span>Updated <b>${esc(day)}</b></span>`;
-    $('foot').innerHTML = `Prices and photos come from Amazon.ca, scanned ${esc(when.toLocaleString('en-CA'))}, while signed out and with no delivery address set. Amazon has one price for the whole country, so there are no store filters here. Amazon has no "% off" filter, so each scan reads Amazon's deals list plus Amazon search results for a fixed set of furniture, outdoor, camping, hunting, farm, electronics and tool searches. It shows only items whose title carries a recognised brand name, whose list price is $100 or more and whose price is 50% off or more of it, with any coupon counted. It is a sample of Amazon, not every product. The crossed-out price is the list price Amazon shows, which is not always what the item recently sold for. A coupon only applies once you clip it on the product page. Amazon deals can sell out or end within hours, and the price and any coupon can differ at checkout, so check before you buy. This page does not use affiliate links. Product photos load from Amazon's image servers and belong to Amazon and its sellers. This is an independent tool and is not affiliated with Amazon.`;
+    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span><b>${ITEMS.filter(i => i.brand).length.toLocaleString()}</b> from name brands</span><span>Listed at <b>$100 or more</b></span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices and photos come from Amazon.ca, scanned ${esc(when.toLocaleString('en-CA'))}, while signed out and with no delivery address set. Amazon has one price for the whole country, so there are no store filters here. Amazon has no "% off" filter, so each scan reads Amazon's deals list plus Amazon search results for a fixed set of furniture, outdoor, camping, hunting, farm, electronics and tool searches. It shows items whose list price is $100 or more and whose price is 50% off or more of it, with any coupon counted; items whose title starts with a recognised brand are labelled with it and can be isolated with the Brands filter. Items from lesser-known sellers are included too, and their list prices are the least reliable, so check the real price before you buy. It is a sample of Amazon, not every product. The crossed-out price is the list price Amazon shows, which is not always what the item recently sold for. A coupon only applies once you clip it on the product page. Amazon deals can sell out or end within hours, and the price and any coupon can differ at checkout, so check before you buy. This page does not use affiliate links. Product photos load from Amazon's image servers and belong to Amazon and its sellers. This is an independent tool and is not affiliated with Amazon.`;
   }
 
   function wire() {
@@ -193,6 +198,7 @@
     $('q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => set('q', e.target.value), 150); });
     $('minpct').addEventListener('change', e => set('minpct', +e.target.value));
     $('sort').addEventListener('change', e => set('sort', e.target.value));
+    $('brands').addEventListener('change', e => set('brands', +e.target.value));
     $('when').addEventListener('change', e => set('when', +e.target.value));
     $('cat').addEventListener('change', e => set('cat', +e.target.value));
     $('more').addEventListener('click', () => { shown += PAGE; render(false); });
@@ -200,6 +206,8 @@
     if (![50, 60, 70, 80, 90].includes(state.minpct)) state.minpct = 50;
     if (!['save', 'pct', 'low'].includes(state.sort)) state.sort = 'save';
     if (![0, 1, 3, 7].includes(state.when)) state.when = 0;
+    if (![0, 1].includes(state.brands)) state.brands = 0;
+    $('brands').value = String(state.brands);
     $('when').value = String(state.when);
     $('minpct').value = String(state.minpct); $('sort').value = state.sort;
   }

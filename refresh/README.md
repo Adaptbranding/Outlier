@@ -147,6 +147,10 @@ has 71 extra hunting queries (clothing, blinds, stands, calls, optics, shooting 
 The merge picks the brand that starts earliest in the first five words, tags clearly-hunting titles with the Hunting category, uses the link text when a
 search card's heading is only the brand, and has a small `EXCLUDE` list for items checked by hand (search-card list price belonged to another variant).
 
+Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
+merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
+separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).
+
 ## New-deal tracking
 
 `build_data.py` keeps each item's first-seen date (row index 9, `YYYY-MM-DD`) by reading the file it is about to overwrite, so always build straight into `data/<retailer>/deals.json` (never a temp path, or every item loses its date and nothing shows as new). Items missing from the previous file get today's date; items from before tracking stay unknown (empty) until the next day. The site's "Show" filter and the search page's "New" badge use that date against each file's `generated` day.

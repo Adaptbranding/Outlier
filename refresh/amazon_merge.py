@@ -1,6 +1,8 @@
 """Merge the Amazon.ca scans into one raw file for build_data.py (mode "am").
 
-usage: python3 -I refresh/amazon_merge.py <wide_items.json> <raw_out.json> [<deals_list_raw.json>]
+usage: python3 -I refresh/amazon_merge.py [--any] <wide_items.json> <raw_out.json> [<deals_list_raw.json>]
+
+  --any               keep items with no recognised brand too (brand is left blank); without it only name brands are kept
 
   wide_items.json     window.__awItems from refresh/amazon_wide_scan.js (a JSON list)
   deals_list_raw.json optional export of refresh/amazon_scan.js (Amazon's own deals list); kept only for name brands
@@ -9,8 +11,10 @@ Name brand = the title contains a brand from the BRANDS list in refresh/amazon_w
 import ast, json, re, sys, os, datetime
 
 here = os.path.dirname(os.path.abspath(__file__))
-wide_path, out_path = sys.argv[1], sys.argv[2]
-sale_path = sys.argv[3] if len(sys.argv) > 3 else None
+ANY = "--any" in sys.argv
+args = [a for a in sys.argv[1:] if a != "--any"]
+wide_path, out_path = args[0], args[1]
+sale_path = args[2] if len(args) > 2 else None
 
 src = open(os.path.join(here, "amazon_wide_scan.js"), encoding="utf-8").read()
 m = re.search(r"const BRANDS = (\[.*?\]);\n", src, re.S)
@@ -66,7 +70,7 @@ for w in wide:
     if asin in EXCLUDE:
         dropped_inflated += 1
         continue
-    if w["eff"] < w["was"] * (1 - MAX_OFF) or not brand_of(w["t"]):
+    if w["eff"] < w["was"] * (1 - MAX_OFF) or not (ANY or brand_of(w["t"])):
         dropped_inflated += 1
         continue
     items[asin] = [asin, title_of(w["t"], w["path"]), w["path"], brand_of(w["t"]), asin, tag_hunting(w["cats"], w["t"]), 0, [[0, w["eff"], None, w["was"], None]], img_ok(w.get("img")), w.get("note") or ""]
@@ -78,7 +82,7 @@ if sale_path:
         sale_total += 1
         b = brand_of(it[1])
         d0 = it[7][0]
-        if not b or d0[1] < d0[3] * (1 - MAX_OFF):
+        if not (ANY or b) or d0[1] < d0[3] * (1 - MAX_OFF):
             continue
         sale_kept += 1
         cidx = sorted({SALE_CAT[cats[c]] for c in it[5] if cats[c] in SALE_CAT})

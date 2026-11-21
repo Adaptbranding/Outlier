@@ -84,7 +84,7 @@
       const tl = norm(c.t);
       let brand = '';
       for (const b of BRAND_LIST) { if (tl.includes(norm(b))) { brand = b; break; } }
-      if (!brand) continue;
+      if (!brand && !window.__AW_ANY) continue;  // window.__AW_ANY = true keeps unbranded items too (brand is '')
       items.push({ asin, t: c.t, path, brand, cur: c.cur, was: c.was, eff: c.eff, note: c.note, img: c.img, cats: [...cats].sort() });
     }
     window.__awItems = items;
