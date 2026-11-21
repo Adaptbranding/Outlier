@@ -117,8 +117,8 @@ Same platform as Canadian Tire (marks.com). The sale lists show one price for ev
 ## Amazon.ca
 
 Not a store scan: Amazon has one price for the whole country, so the file has one "store" (Amazon.ca) and the page has no store filters.
-Criteria (owner, 2026-11-21): name-brand items anywhere on Amazon.ca (not only its sale list) that are 50% off or more of a list price over
-$200, coupons counted, in furniture, outdoor & recreation, camping, hunting, farm equipment (plus electronics, tools and sports from the
+Criteria (owner, 2026-11-21): name-brand items anywhere on Amazon.ca (not only its sale list) that are 50% off or more of a list price of $100 or more,
+coupons counted, in furniture, outdoor & recreation, camping, hunting, farm equipment (plus electronics, tools and sports from the
 sale list). Amazon search has no "% off" filter, so there are two scans, both run from one signed-OUT amazon.ca tab (never sign in):
 
 1. Open https://www.amazon.ca/gp/goldbox, paste `refresh/keepalive.js` (check `window.__keepState` is `open`).
@@ -140,6 +140,12 @@ the merge for both scans; "...compatible with Husqvarna" accessories do not coun
 its list price (over 80% off), which on 2026-11-21 was always a made-up reference price (a $43 organizer "listed" at $4,299). Coupons: a card that already shows "You pay $X ... coupon applied" uses X; "Save N%" or "Save $N" coupons (clip on the
 product page) are subtracted from the price; the page says which. The "Was" price is Amazon's reference price and can be inflated; the page says so.
 Coverage is the searches in `Q`, not every Amazon product; most 50%-off search results turned out to be rare (about 1 in 400 cards in a pilot).
+
+Added 2026-11-21 (owner: lower the floor to $100 and add hunting gear): the list-price floor is $100 or more in both scans, and `amazon_wide_scan.js` now
+has 71 extra hunting queries (clothing, blinds, stands, calls, optics, shooting accessories) plus more hunting brands. To run only those, set
+`window.__AW_ONLY_EXTRA = true` before pasting the script (about 15 min); concatenate its `window.__awItems` with the main run's before merging.
+The merge picks the brand that starts earliest in the first five words, tags clearly-hunting titles with the Hunting category, uses the link text when a
+search card's heading is only the brand, and has a small `EXCLUDE` list for items checked by hand (search-card list price belonged to another variant).
 
 ## New-deal tracking
 

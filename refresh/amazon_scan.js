@@ -1,4 +1,4 @@
-// Amazon.ca sale-list scan: deals that are 50% off or more where the "Was/List" price is over $200, in Electronics, Tools & Home
+// Amazon.ca sale-list scan: deals that are 50% off or more where the "Was/List" price is $100 or more, in Electronics, Tools & Home
 // Improvement, Sports & Outdoors, Home & Kitchen and Patio, Lawn & Garden. Run in a signed-OUT amazon.ca tab (https://www.amazon.ca/gp/goldbox, which redirects to the current
 // promotions page). Starts a background job: window.__AMZ. Amazon has no store-level prices, so the file has one "store" (Amazon.ca).
 // Uses only the endpoint the deals page itself calls, same-origin, one request at a time with a 400 ms pause:
@@ -8,7 +8,7 @@
 {
   const PAGE_TYPE = window.__AMZ_PAGE_TYPE || 'blackfriday';  // pageTypeId of the deals page; change if Amazon renames it after the sale
   const DEPTS = [['Electronics', '677211011'], ['Sports & Outdoors', '2242990011'], ['Tools & Home Improvement', '3006903011'], ['Home & Kitchen', '2206276011'], ['Patio, Lawn & Garden', '6299024011']];
-  const MIN_LIST = 200, MAX_RATIO = 0.5;
+  const MIN_LIST = 100, MAX_RATIO = 0.5;
   const R = window.__AMZ = { phase: 'scan', dept: '', pages: 0, seen: 0, errs: [], finished: false, aborted: null, perDept: {} };
   const found = {};  // asin -> { p: product, depts: Set }
   const sleep = ms => new Promise(res => setTimeout(res, ms));
@@ -46,14 +46,14 @@
       if (total >= 480) R.errs.push({ dept: name, status: 'near cap ' + total });
       await sleep(400);
     }
-    // ---- Export: keep deals whose list price is over $200 and whose price is half of it or less.
+    // ---- Export: keep deals whose list price is $100 or more and whose price is half of it or less.
     const cats = DEPTS.map(d => d[0]);
     const items = [];
     for (const asin in found) {
       const { p, depts } = found[asin];
       const pay = parseFloat(p.price && p.price.priceToPay && p.price.priceToPay.price);
       const was = parseFloat(p.price && p.price.basisPrice && p.price.basisPrice.price);
-      if (!(pay > 0 && was > MIN_LIST && pay <= was * MAX_RATIO + 0.005)) continue;
+      if (!(pay > 0 && was >= MIN_LIST && pay <= was * MAX_RATIO + 0.005)) continue;
       if (p.dealDetails && p.dealDetails.state && p.dealDetails.state !== 'AVAILABLE') continue;
       const hi = p.image && (p.image.hiRes || p.image.lowRes);
       const img = hi && hi.baseUrl && hi.extension ? hi.baseUrl + '.' + hi.extension : '';

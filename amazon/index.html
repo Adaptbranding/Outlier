@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Amazon.ca name-brand deals at 50% off or more, items over $200 | Outlier</title>
-<meta name="description" content="Name-brand items on Amazon.ca at 50% off or more (coupons counted) with a list price over $200: furniture, outdoor, camping, hunting, farm equipment, electronics and tools.">
+<title>Amazon.ca name-brand deals at 50% off or more, items listed at $100 or more | Outlier</title>
+<meta name="description" content="Name-brand items on Amazon.ca at 50% off or more (coupons counted) with a list price of $100 or more: furniture, outdoor, camping, hunting, farm equipment, electronics and tools.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 
 <header class="wrap hero">
   <h1>Amazon.ca outliers</h1>
-  <p>Name-brand items on Amazon.ca at 50% off or more, coupons counted, with a list price over $200: furniture, outdoor and recreation, camping, hunting, farm equipment, electronics and tools.</p>
+  <p>Name-brand items on Amazon.ca at 50% off or more, coupons counted, with a list price of $100 or more: furniture, outdoor and recreation, camping, hunting, farm equipment, electronics and tools.</p>
   <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
 </header>
 
@@ -183,8 +183,8 @@
     const when = new Date(D.generated);
     const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
     const fresh = ITEMS.some(i => i.first) ? `<span><b>${ITEMS.filter(isNew).length.toLocaleString()}</b> new in latest update</span>` : '';
-    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span>Name brands, listed over <b>$200</b></span><span>Updated <b>${esc(day)}</b></span>`;
-    $('foot').innerHTML = `Prices and photos come from Amazon.ca, scanned ${esc(when.toLocaleString('en-CA'))}, while signed out and with no delivery address set. Amazon has one price for the whole country, so there are no store filters here. Amazon has no "% off" filter, so each scan reads Amazon's deals list plus Amazon search results for a fixed set of furniture, outdoor, camping, hunting, farm, electronics and tool searches. It shows only items whose title carries a recognised brand name, whose list price is over $200 and whose price is 50% off or more of it, with any coupon counted. It is a sample of Amazon, not every product. The crossed-out price is the list price Amazon shows, which is not always what the item recently sold for. A coupon only applies once you clip it on the product page. Amazon deals can sell out or end within hours, and the price and any coupon can differ at checkout, so check before you buy. This page does not use affiliate links. Product photos load from Amazon's image servers and belong to Amazon and its sellers. This is an independent tool and is not affiliated with Amazon.`;
+    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span>Name brands, listed at <b>$100 or more</b></span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices and photos come from Amazon.ca, scanned ${esc(when.toLocaleString('en-CA'))}, while signed out and with no delivery address set. Amazon has one price for the whole country, so there are no store filters here. Amazon has no "% off" filter, so each scan reads Amazon's deals list plus Amazon search results for a fixed set of furniture, outdoor, camping, hunting, farm, electronics and tool searches. It shows only items whose title carries a recognised brand name, whose list price is $100 or more and whose price is 50% off or more of it, with any coupon counted. It is a sample of Amazon, not every product. The crossed-out price is the list price Amazon shows, which is not always what the item recently sold for. A coupon only applies once you clip it on the product page. Amazon deals can sell out or end within hours, and the price and any coupon can differ at checkout, so check before you buy. This page does not use affiliate links. Product photos load from Amazon's image servers and belong to Amazon and its sellers. This is an independent tool and is not affiliated with Amazon.`;
   }
 
   function wire() {
