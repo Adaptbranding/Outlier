@@ -114,6 +114,25 @@ Same platform as Canadian Tire (marks.com). The sale lists show one price for ev
 6. Checks before pushing: stores >= 120, items >= 50, dropped.bad_url == 0, with_stock_count > 0, with_image >= 90% of items.
 7. Commit only `data/marks/deals.json` and push to `main`.
 
+## Amazon.ca
+
+Not a store scan: Amazon has one price for the whole country, so the file has one "store" (Amazon.ca) and the page has no store filters.
+Criteria (set by the owner 2026-11-21): Electronics, Tools & Home Improvement and Sports & Outdoors deals that are 50% off or more where
+Amazon's "Was/List" price is over $200. It covers Amazon's own deals list (the Black Friday / deals page), not every Amazon product.
+
+1. Open https://www.amazon.ca/gp/goldbox in a new tab, **signed out of Amazon** (the page reads the same for everyone; do not sign in).
+2. Paste and run `refresh/amazon_scan.js` (about 20 seconds: 3 departments, about 15 requests, 400 ms apart, same-origin, the endpoint the deals
+   page itself calls with `filters.minDiscount = 50`). Poll `JSON.stringify(window.__AMZ)`; it is done when `finished` is true.
+   Check `errs` is empty and `perDept` is well under 480 per department (Amazon caps one query at 500; "near cap" in `errs` means split the
+   department by price band before trusting it). `blocked 403/429/503` in `aborted` means stop and report; do not retry that day.
+3. `window.__amzDownload(window.__amzExport(), 'amazon-ca-outliers-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`, stage it
+   from Downloads, then `python3 -I refresh/build_data.py <raw.json> data/amazon/deals.json am`.
+4. Checks: items >= 20, dropped.bad_url == 0, with_image >= 90% of items. Commit only `data/amazon/deals.json` and push to `main`.
+
+If the deals page is renamed after the sale (the API's `rankingContext.pageTypeId` is `blackfriday` now), set `window.__AMZ_PAGE_TYPE` to the new
+id before running the script (the id appears in the deals page's own `/d2b/api/v1/products/search` requests). An empty result with no errors
+means the id is stale. The "Was" price is Amazon's reference price and can be inflated; the page says so.
+
 ## New-deal tracking
 
 `build_data.py` keeps each item's first-seen date (row index 9, `YYYY-MM-DD`) by reading the file it is about to overwrite, so always build straight into `data/<retailer>/deals.json` (never a temp path, or every item loses its date and nothing shows as new). Items missing from the previous file get today's date; items from before tracking stay unknown (empty) until the next day. The site's "Show" filter and the search page's "New" badge use that date against each file's `generated` day.

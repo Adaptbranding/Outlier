@@ -1,7 +1,7 @@
 import json, re, sys, math
 
 raw_path, out_path = sys.argv[1], sys.argv[2]
-retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default), "hh" or "ra"
+retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default, also Mark's), "hh", "ra" or "am" (Amazon.ca: one online "store")
 with open(raw_path, encoding="utf-8") as f:
     raw = json.load(f)
 
@@ -55,6 +55,9 @@ nstores = len(stores)
 if retailer == "hh":
     path_re = re.compile(r"^/en/[a-z0-9\-]+/p/\d+$")
     img_re = re.compile(r"^https://homehardware\.sirv\.com/products/\d+/\d+\.view$")
+elif retailer == "am":
+    path_re = re.compile(r"^/[A-Za-z0-9%_.\-]{1,200}/dp/[A-Z0-9]{10}$")
+    img_re = re.compile(r"^https://m\.media-amazon\.com/images/I/[A-Za-z0-9%+_.\-]+\.(jpg|png)$")
 elif retailer == "ra":
     path_re = re.compile(r"^/en/product/[a-z0-9\-]+$")
     img_re = re.compile(r"^https://cdn\.rona\.ca/images/[A-Za-z0-9_\-]+\.jpg$")
@@ -93,7 +96,7 @@ for it in raw["items"]:
     if not clean:
         dropped["no_deals"] += 1
         continue
-    if len(clean) >= nstores:
+    if len(clean) >= nstores and nstores > 1:  # a single online "store" (Amazon) has every item at "all" stores by definition
         dropped["all_stores"] += 1
         continue
     if cat_remap is not None:
@@ -159,7 +162,7 @@ if incomplete:
     for it in items:
         if not it[7]:
             dropped["no_deals"] += 1
-        elif len(it[7]) >= nstores:
+        elif len(it[7]) >= nstores and nstores > 1:
             dropped["all_stores"] += 1
         else:
             it[7].sort(key=lambda d: d[1])

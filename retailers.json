@@ -31,6 +31,14 @@
       "logo": null,
       "tagline": "Ontario stores \u00b7 50% off or more",
       "live": true
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon.ca",
+      "path": "amazon/",
+      "logo": null,
+      "tagline": "Ships to Ontario \u00b7 50% off or more \u00b7 listed over $200",
+      "live": true
     }
   ]
 }
