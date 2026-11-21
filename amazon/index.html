@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Amazon.ca deals at 50% off or more on items over $200 | Outlier</title>
-<meta name="description" content="Amazon.ca deals at 50% off or more on electronics, tools, sports and outdoors items listed at over $200, with price and photos.">
+<title>Amazon.ca name-brand deals at 50% off or more, items over $200 | Outlier</title>
+<meta name="description" content="Name-brand items on Amazon.ca at 50% off or more (coupons counted) with a list price over $200: furniture, outdoor, camping, hunting, farm equipment, electronics and tools.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 
 <header class="wrap hero">
   <h1>Amazon.ca outliers</h1>
-  <p>Amazon.ca deals at 50% off or more on electronics, tools, sports and outdoors items that are listed at over $200.</p>
+  <p>Name-brand items on Amazon.ca at 50% off or more, coupons counted, with a list price over $200: furniture, outdoor and recreation, camping, hunting, farm equipment, electronics and tools.</p>
   <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
 </header>
 
@@ -96,7 +96,7 @@
       const d = r[7][0];
       const raw = d[3] ? 1 - d[1] / d[3] : 0;
       const deal = { sale: d[1], orig: d[3], raw, pct: Math.round(raw * 1000) / 10 };
-      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', cats: r[5], img: imgUrl(r[8]), deal, first: typeof r[9] === 'string' ? r[9] : '', hay: (r[1] + ' ' + (r[3] || '') + ' ' + r[0]).toLowerCase() };
+      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', cats: r[5], note: typeof r[10] === 'string' ? r[10] : '', img: imgUrl(r[8]), deal, first: typeof r[9] === 'string' ? r[9] : '', hay: (r[1] + ' ' + (r[3] || '') + ' ' + r[0]).toLowerCase() };
     });
   }
 
@@ -153,12 +153,14 @@
       ? `<a class="media" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer"><span class="pct">${offLabel(d)} off</span>${fresh}</a>`
       : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><span class="pct">${offLabel(d)} off</span>${fresh}</a>`;
     const cats = it.cats.map(c => D.cats[c]).filter(Boolean).join(' · ');
+    const noteTxt = it.note === 'coupon applied' ? 'price includes a coupon' : it.note ? 'after ' + it.note + ' (clip it on Amazon)' : '';
+    const coupon = noteTxt ? ` · <b>${esc(noteTxt)}</b>` : '';
     return `<article class="card">${media}
       <div class="body">
-        <p class="brand">${esc(cats)}</p>
+        <p class="brand">${esc(it.brand || cats)}${it.brand && cats ? ' · ' + esc(cats) : ''}</p>
         <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
         <p class="price"><strong>${fmt(d.sale)}</strong><s>${fmt(d.orig)}</s></p>
-        <p class="where">Save <b>${fmt(d.orig - d.sale)}</b> · sold on Amazon.ca</p>
+        <p class="where">Save <b>${fmt(d.orig - d.sale)}</b> · sold on Amazon.ca${coupon}</p>
         <div class="actions"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View deal</a></div>
       </div></article>`;
   }
@@ -181,8 +183,8 @@
     const when = new Date(D.generated);
     const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
     const fresh = ITEMS.some(i => i.first) ? `<span><b>${ITEMS.filter(isNew).length.toLocaleString()}</b> new in latest update</span>` : '';
-    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span>Listed over <b>$200</b></span><span>Updated <b>${esc(day)}</b></span>`;
-    $('foot').innerHTML = `Prices and photos come from Amazon.ca's own deals list, scanned ${esc(when.toLocaleString('en-CA'))}, while signed out and with no delivery address set. Amazon has one price for the whole country, so there are no store filters here. Only Electronics, Tools &amp; Home Improvement and Sports &amp; Outdoors deals are scanned, and only ones that are 50% off or more with a list price over $200. The crossed-out price is the list price Amazon shows, which is not always what the item recently sold for. Amazon deals can sell out or end within hours, and the price and any coupon can differ at checkout, so check before you buy. This page does not use affiliate links. Product photos load from Amazon's image servers and belong to Amazon and its sellers. This is an independent tool and is not affiliated with Amazon.`;
+    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span>Name brands, listed over <b>$200</b></span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices and photos come from Amazon.ca, scanned ${esc(when.toLocaleString('en-CA'))}, while signed out and with no delivery address set. Amazon has one price for the whole country, so there are no store filters here. Amazon has no "% off" filter, so each scan reads Amazon's deals list plus Amazon search results for a fixed set of furniture, outdoor, camping, hunting, farm, electronics and tool searches. It shows only items whose title carries a recognised brand name, whose list price is over $200 and whose price is 50% off or more of it, with any coupon counted. It is a sample of Amazon, not every product. The crossed-out price is the list price Amazon shows, which is not always what the item recently sold for. A coupon only applies once you clip it on the product page. Amazon deals can sell out or end within hours, and the price and any coupon can differ at checkout, so check before you buy. This page does not use affiliate links. Product photos load from Amazon's image servers and belong to Amazon and its sellers. This is an independent tool and is not affiliated with Amazon.`;
   }
 
   function wire() {

@@ -117,21 +117,29 @@ Same platform as Canadian Tire (marks.com). The sale lists show one price for ev
 ## Amazon.ca
 
 Not a store scan: Amazon has one price for the whole country, so the file has one "store" (Amazon.ca) and the page has no store filters.
-Criteria (set by the owner 2026-11-21): Electronics, Tools & Home Improvement and Sports & Outdoors deals that are 50% off or more where
-Amazon's "Was/List" price is over $200. It covers Amazon's own deals list (the Black Friday / deals page), not every Amazon product.
+Criteria (owner, 2026-11-21): name-brand items anywhere on Amazon.ca (not only its sale list) that are 50% off or more of a list price over
+$200, coupons counted, in furniture, outdoor & recreation, camping, hunting, farm equipment (plus electronics, tools and sports from the
+sale list). Amazon search has no "% off" filter, so there are two scans, both run from one signed-OUT amazon.ca tab (never sign in):
 
-1. Open https://www.amazon.ca/gp/goldbox in a new tab, **signed out of Amazon** (the page reads the same for everyone; do not sign in).
-2. Paste and run `refresh/amazon_scan.js` (about 20 seconds: 3 departments, about 15 requests, 400 ms apart, same-origin, the endpoint the deals
-   page itself calls with `filters.minDiscount = 50`). Poll `JSON.stringify(window.__AMZ)`; it is done when `finished` is true.
-   Check `errs` is empty and `perDept` is well under 480 per department (Amazon caps one query at 500; "near cap" in `errs` means split the
-   department by price band before trusting it). `blocked 403/429/503` in `aborted` means stop and report; do not retry that day.
-3. `window.__amzDownload(window.__amzExport(), 'amazon-ca-outliers-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`, stage it
-   from Downloads, then `python3 -I refresh/build_data.py <raw.json> data/amazon/deals.json am`.
-4. Checks: items >= 20, dropped.bad_url == 0, with_image >= 90% of items. Commit only `data/amazon/deals.json` and push to `main`.
+1. Open https://www.amazon.ca/gp/goldbox, paste `refresh/keepalive.js` (check `window.__keepState` is `open`).
+2. Sale list (about 30 s; Electronics, Sports & Outdoors, Tools & Home Improvement, Home & Kitchen, Patio Lawn & Garden): paste `refresh/amazon_scan.js`, poll `window.__AMZ` until `finished`, then
+   `window.__amzDownload(window.__amzExport(), 'amazon-sale-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`.
+   Check `errs` is empty and every `perDept` is under 480 (Amazon caps a query at 500). If the page was renamed after the sale, set
+   `window.__AMZ_PAGE_TYPE` to the new `rankingContext.pageTypeId` first; 0 items with no errors means it is stale.
+3. Search scan (about 30-40 min, 380 search pages, one at a time, 800 ms pause): paste `refresh/amazon_wide_scan.js`, poll `window.__AW`
+   (`q`, `done` of `total`, `errs`, `aborted`, `finished`). Then
+   `window.__awDownload(window.__awItems, 'amazon-wide-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`.
+   A CAPTCHA, 403, 429 or 503 stops the scan (`aborted`): do not work around it; report and push nothing.
+   (If Chrome stops saving a later download from the same tab, copy the JSON into `localStorage` and download it from a second amazon.ca tab; delete the key after.)
+4. Stage both files from Downloads, then
+   `python3 -I refresh/amazon_merge.py <wide.json> <raw.json> <sale.json>` and `python3 -I refresh/build_data.py <raw.json> data/amazon/deals.json am`.
+5. Checks: items >= 10, dropped.bad_url == 0, with_image >= 90% of items. Commit only `data/amazon/deals.json` and push to `main`.
 
-If the deals page is renamed after the sale (the API's `rankingContext.pageTypeId` is `blackfriday` now), set `window.__AMZ_PAGE_TYPE` to the new
-id before running the script (the id appears in the deals page's own `/d2b/api/v1/products/search` requests). An empty result with no errors
-means the id is stale. The "Was" price is Amazon's reference price and can be inflated; the page says so.
+"Name brand" = one of the first five words of the title is a brand from the `BRANDS` list at the top of `amazon_wide_scan.js` (the one list, used by
+the merge for both scans; "...compatible with Husqvarna" accessories do not count). Add brands there. The merge also drops any item priced under 20% of
+its list price (over 80% off), which on 2026-11-21 was always a made-up reference price (a $43 organizer "listed" at $4,299). Coupons: a card that already shows "You pay $X ... coupon applied" uses X; "Save N%" or "Save $N" coupons (clip on the
+product page) are subtracted from the price; the page says which. The "Was" price is Amazon's reference price and can be inflated; the page says so.
+Coverage is the searches in `Q`, not every Amazon product; most 50%-off search results turned out to be rare (about 1 in 400 cards in a pilot).
 
 ## New-deal tracking
 

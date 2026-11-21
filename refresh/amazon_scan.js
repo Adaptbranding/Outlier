@@ -1,5 +1,5 @@
-// Amazon.ca outlier scan: deals that are 50% off or more where the "Was/List" price is over $200, in Electronics, Tools & Home
-// Improvement and Sports & Outdoors. Run in a signed-OUT amazon.ca tab (https://www.amazon.ca/gp/goldbox, which redirects to the current
+// Amazon.ca sale-list scan: deals that are 50% off or more where the "Was/List" price is over $200, in Electronics, Tools & Home
+// Improvement, Sports & Outdoors, Home & Kitchen and Patio, Lawn & Garden. Run in a signed-OUT amazon.ca tab (https://www.amazon.ca/gp/goldbox, which redirects to the current
 // promotions page). Starts a background job: window.__AMZ. Amazon has no store-level prices, so the file has one "store" (Amazon.ca).
 // Uses only the endpoint the deals page itself calls, same-origin, one request at a time with a 400 ms pause:
 //   GET /d2b/api/v1/products/search?pageSize=60&startIndex=<n>&rankingContext=...&filters=...   (filters.minDiscount = 50)
@@ -7,7 +7,7 @@
 // If a department returns 480 or more products the scan says so in R.errs ("near cap"): split that department (price bands) before trusting it.
 {
   const PAGE_TYPE = window.__AMZ_PAGE_TYPE || 'blackfriday';  // pageTypeId of the deals page; change if Amazon renames it after the sale
-  const DEPTS = [['Electronics', '677211011'], ['Sports & Outdoors', '2242990011'], ['Tools & Home Improvement', '3006903011']];
+  const DEPTS = [['Electronics', '677211011'], ['Sports & Outdoors', '2242990011'], ['Tools & Home Improvement', '3006903011'], ['Home & Kitchen', '2206276011'], ['Patio, Lawn & Garden', '6299024011']];
   const MIN_LIST = 200, MAX_RATIO = 0.5;
   const R = window.__AMZ = { phase: 'scan', dept: '', pages: 0, seen: 0, errs: [], finished: false, aborted: null, perDept: {} };
   const found = {};  // asin -> { p: product, depts: Set }

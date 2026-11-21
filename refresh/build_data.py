@@ -65,6 +65,7 @@ else:
     path_re = re.compile(r"^/en/pdp/[a-z0-9\-]+\.html$")
     img_re = re.compile(r"^(product/[A-Za-z0-9/_.\-]+|https://media-www\.(canadiantire|partycity)\.ca/[A-Za-z0-9/_.\-]+)$")
 
+notes = {}  # Amazon only: coupon note per item (raw item index 9), written to output row index 10
 items, dropped = [], {"bad_url": 0, "no_deals": 0, "all_stores": 0, "bad_price": 0}
 for it in raw["items"]:
     code, title, url, brand, sku, cidx, multi, deals = it[:8]
@@ -103,6 +104,8 @@ for it in raw["items"]:
         cidx = [cat_remap[c] for c in cidx if isinstance(c, int) and 0 <= c < len(cat_remap)]
     cidx = sorted({c for c in cidx if isinstance(c, int) and 0 <= c < len(cats)})
     clean.sort(key=lambda d: d[1])
+    if retailer == "am" and len(it) > 9 and isinstance(it[9], str) and it[9]:
+        notes[s(code, 20)] = s(it[9], 60)
     items.append([s(code, 20), s(title), url, s(brand, 80), s(sku, 20), cidx, 1 if multi else 0, clean, img])
 
 # Stores the scan could not finish (listed in the export's "incomplete") keep their previous deals from the file being replaced,
@@ -172,6 +175,8 @@ if incomplete:
 # Row index 9 = first-seen date (YYYY-MM-DD) or "" when unknown. Items absent from the previous file are new today.
 for it in items:
     it.append(prev_first.get(it[0], today if (have_prev and _DATE.match(today)) else ""))
+    if retailer == "am":
+        it.append(notes.get(it[0], ""))  # row index 10: coupon note ("" = none)
 
 out = {
     "generated": s(raw["generated"], 40),
