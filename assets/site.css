@@ -54,7 +54,9 @@ body { background: linear-gradient(180deg, var(--tint) 0, #fff 360px) no-repeat;
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
 .card:hover { border-color: color-mix(in srgb, var(--ink) 28%, var(--line)); transform: translateY(-2px); }
 .media { position: relative; display: block; aspect-ratio: 1; background: #fff; border-bottom: 1px solid var(--line); }
-.media img { width: 100%; height: 100%; object-fit: contain; padding: 14px; display: block; }
+/* Every photo sits in the same square frame. It shrinks to fit but is never stretched past its real size,
+   so small photos stay sharp (centred at their own size) instead of being blown up. */
+.media img { position: absolute; inset: 14px; margin: auto; width: auto; height: auto; max-width: calc(100% - 28px); max-height: calc(100% - 28px); object-fit: contain; display: block; }
 .media.none::after { content: "No photo"; position: absolute; inset: 0; display: grid; place-items: center; color: #8a93a1; font-size: .85rem; }
 .pct { position: absolute; top: 10px; left: 10px; background: var(--save); color: #fff; font-weight: 700; font-size: .85rem; padding: 3px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
 .rare { position: absolute; bottom: 10px; left: 10px; background: var(--rare-soft); color: var(--rare); font-weight: 600; font-size: .75rem; padding: 3px 9px; border-radius: 999px; }
@@ -111,7 +113,7 @@ footer p { margin: 10px 0 0; }
   .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .body { padding: 10px 12px 12px; }
   .price strong { font-size: 1.25rem; }
-  .media img { padding: 8px; }
+  .media img { inset: 8px; max-width: calc(100% - 16px); max-height: calc(100% - 16px); }
   .actions { flex-direction: column; }
   .sel select { max-width: none; }
   .sel { flex: 1 1 calc(50% - 8px); }

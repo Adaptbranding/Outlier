@@ -15,3 +15,9 @@
     menu.innerHTML = home + items + search;
   }).catch(() => {});
 })();
+
+// RONA photos are requested at the large size (_L). If one is missing, fall back to the original (_M).
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (img && img.tagName === 'IMG' && /^https:\/\/cdn\.rona\.ca\/images\/[A-Za-z0-9_\-]+_L\.jpg$/.test(img.src)) img.src = img.src.replace(/_L\.jpg$/, '_M.jpg');
+}, true);
