@@ -140,7 +140,7 @@
         const raw = d[3] ? 1 - d[1] / d[3] : 0;
         const q = typeof d[4] === 'number' && d[4] >= 0 ? d[4] : 0;
         const w = typeof d[5] === 'number' && d[5] >= 0 ? d[5] : 0;
-        return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, w, raw, clr: !!r[10], pct: Math.round(raw * 1000) / 10 };
+        return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, w, raw, clr: !d[3], pct: Math.round(raw * 1000) / 10 };
       });
       return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', sku: r[4] || '', cats: r[5], multi: !!r[6], img: imgUrl(r[8]), deals, first: typeof r[9] === 'string' ? r[9] : '', clr: !!r[10], n: deals.length, hay: (r[1] + ' ' + (r[3] || '') + ' ' + (r[4] || '') + ' ' + r[0]).toLowerCase() };
     });
@@ -183,10 +183,10 @@
       if (state.maxn && it.n > state.maxn) continue;
       if (since && !(it.first && it.first >= since)) continue;
       if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
-      if (state.kind === 'sale' && it.clr) continue;
-      if (state.kind === 'clr' && !it.clr) continue;
-      if (it.clr && state.minpct > 50) continue;  // clearance has no regular price on homedepot.ca, so its discount is unknown
-      let vis = it.deals.filter(d => (it.clr || d.raw * 100 >= state.minpct - 0.05) && (!state.prov || PROV[d.s] === state.prov));
+      // A clearance price with no regular price shown on homedepot.ca has an unknown discount: it counts only at the 50% minimum.
+      let vis = it.deals.filter(d => (d.clr ? state.minpct <= 50 : d.raw * 100 >= state.minpct - 0.05) && (!state.prov || PROV[d.s] === state.prov));
+      if (state.kind === 'sale') vis = vis.filter(d => !d.clr);
+      if (state.kind === 'clr') vis = vis.filter(d => d.clr);
       if (home) {
         if (state.radius === 0) vis = vis.filter(d => d.s === state.store);
         else if (state.radius > 0) vis = vis.filter(d => dist[d.s] <= state.radius);
@@ -196,7 +196,7 @@
       allCount++;
       if (state.cat >= 0 && !it.cats.includes(state.cat)) continue;
       let best = vis[0];
-      for (const d of vis) if (d.pct > best.pct || (d.pct === best.pct && d.sale < best.sale)) best = d;
+      for (const d of vis) if ((!d.clr && best.clr) || (d.clr === best.clr && (d.pct > best.pct || (d.pct === best.pct && d.sale < best.sale)))) best = d;
       let near = null;
       if (dist) near = vis.reduce((m, d) => dist[d.s] < dist[m.s] ? d : m, vis[0]);
       out.push({ it, vis, best, near, nd: near ? dist[near.s] : null });
@@ -240,7 +240,7 @@
       <div class="body">
         <p class="brand">${esc(it.brand)}</p>
         <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
-        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong>${it.clr ? '' : `<s>${fmt(best.orig)}</s>`}</p>
+        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong>${best.clr ? '' : `<s>${fmt(best.orig)}</s>`}</p>
         <p class="where">${where}</p>
         <div class="actions"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View deal</a>${more}</div>
       </div></article>`;
@@ -270,7 +270,7 @@
     $('dsub').textContent = `${vis.length} store${vis.length === 1 ? '' : 's'} with this discount${vis.length !== it.n ? ` (${it.n} in Canada in total)` : ''}`;
     $('dlist').innerHTML = listed.map(d => `<li>
       <span class="nm">${esc(storeName(d.s))}${DIST ? ' · ' + Math.round(DIST[d.s]) + ' km' : ''}</span>
-      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}${it.clr ? '' : `<s>${fmt(d.orig)}</s>`}</span>
+      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}${d.clr ? '' : `<s>${fmt(d.orig)}</s>`}</span>
       <span class="ad">${esc(STORES[d.s] ? STORES[d.s][2] : '')}</span>
       <span class="st">${offLabel(d)} · ${stockTxt(d)}</span>
       <a class="go" href="${esc(storeUrl(it, d.s))}" target="_blank" rel="noopener">Open at this store</a></li>`).join('');
@@ -283,8 +283,8 @@
     const when = new Date(D.generated);
     const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
     const fresh = ITEMS.some(i => i.first) ? `<span><b>${ITEMS.filter(isNew).length.toLocaleString()}</b> new in latest update</span>` : '';
-    $('stats').innerHTML = `<span><b>${ITEMS.filter(i => !i.clr).length.toLocaleString()}</b> deals at 50% off or more</span><span><b>${ITEMS.filter(i => i.clr).length.toLocaleString()}</b> clearance</span>${fresh}<span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> stores checked across Canada</span><span>Updated <b>${esc(day)}</b></span>`;
-    $('foot').innerHTML = `Prices, stock and photos come from homedepot.ca for ${D.storeCount} stores in every province, scanned ${esc(when.toLocaleString('en-CA'))}. Home Depot prices are mostly the same at every store, so what differs between stores is which ones have the item in stock; a deal counts only if the item is in stock at the store, and an item 50% off or more at every scanned store is left out. The scan looks at items on sale (Savings) at 50% or more off the regular price; clearance items are listed separately and marked Clearance with no percentage, because homedepot.ca shows no regular price for them, so their discount cannot be checked (they are hidden when the minimum discount is above 50%). Clearance is final sale in most cases and stock is often very low. Open the product page, then pick the store shown here as your store to see the same price and stock. Product photos load from Home Depot's image servers and belong to Home Depot and its brands. This is an independent tool and is not affiliated with The Home Depot.`;
+    $('stats').innerHTML = `<span><b>${ITEMS.filter(i => i.deals.some(d => !d.clr)).length.toLocaleString()}</b> deals at 50% off or more</span><span><b>${ITEMS.filter(i => i.deals.some(d => d.clr)).length.toLocaleString()}</b> clearance, discount unknown</span>${fresh}<span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> stores checked across Canada</span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices, stock and photos come from homedepot.ca for ${D.storeCount} stores in every province, scanned ${esc(when.toLocaleString('en-CA'))}. Home Depot prices are mostly the same at every store, so what differs between stores is which ones have the item in stock; a deal counts only if the item is in stock at the store, and an item 50% off or more at every scanned store is left out. The scan looks at items on sale (Savings) at 50% or more off the regular price; clearance items get a percentage only where that store shows a regular price next to the clearance price; most clearance items show none, so they are marked Clearance with no percentage (their discount is unknown, and they are hidden when the minimum discount is above 50%). Clearance is final sale in most cases and stock is often very low. Open the product page, then pick the store shown here as your store to see the same price and stock. Product photos load from Home Depot's image servers and belong to Home Depot and its brands. This is an independent tool and is not affiliated with The Home Depot.`;
   }
 
   function wire() {

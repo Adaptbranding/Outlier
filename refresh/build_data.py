@@ -87,8 +87,9 @@ for it in raw["items"]:
         if not isinstance(si, int) or not (0 <= si < nstores) or si in seen:
             continue
         if retailer == "hdc":
-            orig = 0.0 if sale is not None else None  # clearance has no regular price on homedepot.ca
-        if sale is None or orig is None or (orig <= 0 and retailer != "hdc") or sale < 0.05 or (retailer != "hdc" and not (sale <= orig * 0.5 + 0.005)):  # sale < 0.05: $0.01 placeholder prices (seen on marks.com) are not real deals
+            # Most clearance has no regular price on homedepot.ca (orig 0 = discount unknown); where the store shows one, the 50% rule applies.
+            orig = (orig if orig and orig > 0 else 0.0) if sale is not None else None
+        if sale is None or orig is None or (orig <= 0 and retailer != "hdc") or sale < 0.05 or ((retailer != "hdc" or orig > 0) and not (sale <= orig * 0.5 + 0.005)):  # sale < 0.05: $0.01 placeholder prices (seen on marks.com) are not real deals
             dropped["bad_price"] += 1
             continue
         wq = d[5] if len(d) > 5 and isinstance(d[5], int) and not isinstance(d[5], bool) and 0 <= d[5] < 1000000 else None
