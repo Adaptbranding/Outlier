@@ -153,12 +153,13 @@ separates them. Unbranded list prices are the least reliable (many "Smart Watch"
 
 ## Home Depot (all Canadian stores)
 
-Home Depot Canada charges the same price at every store, so the store-level difference is which stores have the item in stock. The page covers all 183 stores in every province (Province filter).
+Home Depot Canada charges the same price at every store, so the store-level difference is which stores have the item in stock. The page covers all 182 stores in every province (Province filter).
 
 1. Open any homedepot.ca page in Chrome (no sign-in needed), paste `refresh/keepalive.js`, then paste `refresh/hd_scan.js`.
-2. It pages the sale filters at one base store (Aurora), keeps items 50% or more off, checks price and stock for each at all 183 stores, then reads links, photos and categories. About 20 minutes. Poll `window.__hd.state` until it is `done` (`error` shows `window.__hd.err`; it stops on any non-200 answer, so do not retry in a loop).
+2. It pages the sale filters at one base store (Aurora), keeps items 50% or more off, checks price and stock for each at all 182 stores, then reads links, photos and categories. About 20 minutes. Poll `window.__hd.state` until it is `done` (`error` shows `window.__hd.err`; it stops on any non-200 answer, so do not retry in a loop).
 3. Download `window.__raw` as a file, stage it, then `python3 -I refresh/build_data.py <raw.json> data/home-depot/deals.json hd`.
-4. Clearance-badged items are not included: homedepot.ca shows no regular price for them, so 50% off cannot be checked. Items on sale only at other stores (not at the base store) are not seen.
+4. Clearance (badge CLR, search filter `xmv`) has no regular price on homedepot.ca, so its discount is unknown. It is scanned separately (about 40 minutes sequentially: per store, one search for the category facet counts, then one filtered search per category with items; run it as 2-3 parallel workers over different store ranges) and saved with `python3 -I refresh/build_data.py <raw.json> data/home-depot/clearance.json hdc`. The page lists it as "Clearance" with price and stock only, and hides it when the minimum discount is raised above 50%. Only items in stock at a store count.
+5. The store list includes an "Online" pseudo-store (id 7274) that has no store inventory and makes the clearance search return a 500: drop it from `stores` before building. Items on sale only at other stores (not at the base store) are not seen.
 
 ## New-deal tracking
 

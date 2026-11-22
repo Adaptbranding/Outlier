@@ -1,7 +1,7 @@
 import json, re, sys, math
 
 raw_path, out_path = sys.argv[1], sys.argv[2]
-retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default, also Mark's), "hh", "ra", "hd" (Home Depot, all of Canada) or "am" (Amazon.ca: one online "store")
+retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default, also Mark's), "hh", "ra", "hd" (Home Depot, all of Canada), "hdc" (Home Depot clearance: no regular price, so orig is 0) or "am" (Amazon.ca: one online "store")
 with open(raw_path, encoding="utf-8") as f:
     raw = json.load(f)
 
@@ -38,7 +38,7 @@ for st in raw["stores"]:
     sid, name, addr, lat, lng = st
     if not isinstance(sid, int):
         raise ValueError(f"bad store id {sid!r}")
-    lat_lo, lat_hi, lng_lo, lng_hi = (41, 84, -142, -52) if retailer == "hd" else (41, 57, -96, -74)  # Home Depot covers every province
+    lat_lo, lat_hi, lng_lo, lng_hi = (41, 84, -142, -52) if retailer in ("hd", "hdc") else (41, 57, -96, -74)  # Home Depot covers every province
     lat = lat if isinstance(lat, (int, float)) and lat_lo < lat < lat_hi else None
     lng = lng if isinstance(lng, (int, float)) and lng_lo < lng < lng_hi else None
     stores.append([sid, s(name, 80), s(addr, 200), lat, lng])
@@ -59,7 +59,7 @@ if retailer == "hh":
 elif retailer == "am":
     path_re = re.compile(r"^/[A-Za-z0-9%_.\-]{1,200}/dp/[A-Z0-9]{10}$")
     img_re = re.compile(r"^https://m\.media-amazon\.com/images/I/[A-Za-z0-9%+_.\-]+\.(jpg|png)$")
-elif retailer == "hd":
+elif retailer in ("hd", "hdc"):
     path_re = re.compile(r"^/product/[a-z0-9\-]+/\d+$")
     img_re = re.compile(r"^https://images\.homedepot\.ca/productimages/p_[A-Za-z0-9\-]+\.jpg(\?product-images=[a-z]+)?$")
 elif retailer == "ra":
@@ -86,7 +86,9 @@ for it in raw["items"]:
         sale, sale_max, orig = money(sale), money(sale_max), money(orig)
         if not isinstance(si, int) or not (0 <= si < nstores) or si in seen:
             continue
-        if sale is None or orig is None or orig <= 0 or sale < 0.05 or not (sale <= orig * 0.5 + 0.005):  # sale < 0.05: $0.01 placeholder prices (seen on marks.com) are not real deals
+        if retailer == "hdc":
+            orig = 0.0 if sale is not None else None  # clearance has no regular price on homedepot.ca
+        if sale is None or orig is None or (orig <= 0 and retailer != "hdc") or sale < 0.05 or (retailer != "hdc" and not (sale <= orig * 0.5 + 0.005)):  # sale < 0.05: $0.01 placeholder prices (seen on marks.com) are not real deals
             dropped["bad_price"] += 1
             continue
         wq = d[5] if len(d) > 5 and isinstance(d[5], int) and not isinstance(d[5], bool) and 0 <= d[5] < 1000000 else None

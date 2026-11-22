@@ -59,6 +59,7 @@
         <option value="80">80% or more</option>
         <option value="90">90% or more</option>
       </select></div>
+      <div class="sel labeled"><span class="tag">Type</span><select id="kind" aria-label="Type of deal"><option value="">Sales and clearance</option><option value="sale">50% off sales</option><option value="clr">Clearance only</option></select></div>
       <div class="sel labeled"><span class="tag">Show</span><select id="when" aria-label="Show only new deals">
         <option value="0" selected>All deals</option>
         <option value="1">New in latest update</option>
@@ -103,16 +104,16 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => n == null ? '' : '$' + n.toFixed(2);
-  const offLabel = (d) => Math.max(50, Math.floor(d.raw * 100 + 0.05)) + '%';
+  const offLabel = (d) => d.clr ? 'Clearance' : Math.max(50, Math.floor(d.raw * 100 + 0.05)) + '% off';
   const stockTxt = (d) => d.q > 0 ? d.q + ' in store' : 'stock not checked';
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const PAGE = 48;
   let D = null, ITEMS = [], STORES = [], shown = PAGE, current = [], DIST = null;
-  const state = { q: '', cat: -1, store: -1, radius: 50, maxn: 0, minpct: 50, sort: 'save', when: 0, prov: '' };
+  const state = { q: '', cat: -1, store: -1, radius: 50, maxn: 0, minpct: 50, sort: 'save', when: 0, prov: '', kind: '' };
 
   try { const saved = JSON.parse(localStorage.getItem('hdOutlierFilters1') || 'null'); if (saved) Object.assign(state, saved, { q: '' }); } catch (e) {}
   if (/[?&]new=1(&|$)/.test(location.search)) state.when = 1;
-  function persist() { try { localStorage.setItem('hdOutlierFilters1', JSON.stringify({ prov: state.prov, store: state.store, radius: state.radius, maxn: state.maxn, minpct: state.minpct, sort: state.sort })); } catch (e) {} }
+  function persist() { try { localStorage.setItem('hdOutlierFilters1', JSON.stringify({ kind: state.kind, prov: state.prov, store: state.store, radius: state.radius, maxn: state.maxn, minpct: state.minpct, sort: state.sort })); } catch (e) {} }
 
   function km(a, b) {
     if (a[3] == null || b[3] == null) return Infinity;
@@ -128,16 +129,20 @@
     return '';
   }
 
-  function prepare(data) {
+  function prepare(data, clr) {
     D = data; STORES = data.stores;
-    ITEMS = data.items.map(r => {
+    const clrIdx = {}; clr.stores.forEach((s, i) => clrIdx[s[0]] = i);
+    const mine = data.stores.map(s => s[0]);
+    const remap = clr.stores.map(s => mine.indexOf(s[0]));
+    const clrItems = clr.items.map(r => [r[0], r[1], r[2], r[3], r[4], r[5].map(c => { const n = clr.cats[c]; let i = D.cats.indexOf(n); if (i < 0) { D.cats.push(n); i = D.cats.length - 1; } return i; }), r[6], r[7].map(d => [remap[d[0]], d[1], d[2], d[3], d[4]]).filter(d => d[0] >= 0), r[8], r[9], 1]);
+    ITEMS = data.items.concat(clrItems).map(r => {
       const deals = r[7].map(d => {
         const raw = d[3] ? 1 - d[1] / d[3] : 0;
         const q = typeof d[4] === 'number' && d[4] >= 0 ? d[4] : 0;
         const w = typeof d[5] === 'number' && d[5] >= 0 ? d[5] : 0;
-        return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, w, raw, pct: Math.round(raw * 1000) / 10 };
+        return { s: d[0], sale: d[1], saleMax: d[2], orig: d[3], q, w, raw, clr: !!r[10], pct: Math.round(raw * 1000) / 10 };
       });
-      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', sku: r[4] || '', cats: r[5], multi: !!r[6], img: imgUrl(r[8]), deals, first: typeof r[9] === 'string' ? r[9] : '', n: deals.length, hay: (r[1] + ' ' + (r[3] || '') + ' ' + (r[4] || '') + ' ' + r[0]).toLowerCase() };
+      return { code: r[0], title: r[1], url: r[2], brand: r[3] || '', sku: r[4] || '', cats: r[5], multi: !!r[6], img: imgUrl(r[8]), deals, first: typeof r[9] === 'string' ? r[9] : '', clr: !!r[10], n: deals.length, hay: (r[1] + ' ' + (r[3] || '') + ' ' + (r[4] || '') + ' ' + r[0]).toLowerCase() };
     });
   }
 
@@ -178,7 +183,10 @@
       if (state.maxn && it.n > state.maxn) continue;
       if (since && !(it.first && it.first >= since)) continue;
       if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
-      let vis = it.deals.filter(d => d.raw * 100 >= state.minpct - 0.05 && (!state.prov || PROV[d.s] === state.prov));
+      if (state.kind === 'sale' && it.clr) continue;
+      if (state.kind === 'clr' && !it.clr) continue;
+      if (it.clr && state.minpct > 50) continue;  // clearance has no regular price on homedepot.ca, so its discount is unknown
+      let vis = it.deals.filter(d => (it.clr || d.raw * 100 >= state.minpct - 0.05) && (!state.prov || PROV[d.s] === state.prov));
       if (home) {
         if (state.radius === 0) vis = vis.filter(d => d.s === state.store);
         else if (state.radius > 0) vis = vis.filter(d => dist[d.s] <= state.radius);
@@ -196,7 +204,7 @@
     const by = {
       pct: (a, b) => b.best.pct - a.best.pct || a.it.n - b.it.n,
       rare: (a, b) => a.it.n - b.it.n || b.best.pct - a.best.pct,
-      save: (a, b) => (b.best.orig - b.best.sale) - (a.best.orig - a.best.sale),
+      save: (a, b) => (b.best.orig - b.best.sale) - (a.best.orig - a.best.sale) || a.best.sale - b.best.sale,
       low: (a, b) => a.best.sale - b.best.sale,
       stock: (a, b) => (b.best.q ?? -1) - (a.best.q ?? -1) || b.best.pct - a.best.pct,
       dist: (a, b) => (a.nd ?? 1e9) - (b.nd ?? 1e9) || b.best.pct - a.best.pct
@@ -222,8 +230,8 @@
     const rare = it.n === 1 ? 'Only 1 store' : it.n <= 5 ? it.n + ' stores' : '';
     const fresh = isNew(it) ? '<span class="new">New</span>' : '';
     const media = it.img
-      ? `<a class="media" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer"><span class="pct">${offLabel(best)} off</span>${fresh}${rare ? `<span class="rare">${rare}</span>` : ''}</a>`
-      : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><span class="pct">${offLabel(best)} off</span>${fresh}${rare ? `<span class="rare">${rare}</span>` : ''}</a>`;
+      ? `<a class="media" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(it.img)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer"><span class="pct">${offLabel(best)}</span>${fresh}${rare ? `<span class="rare">${rare}</span>` : ''}</a>`
+      : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><span class="pct">${offLabel(best)}</span>${fresh}${rare ? `<span class="rare">${rare}</span>` : ''}</a>`;
     const where = vis.length === 1
       ? `<b>${esc(storeName(vis[0].s))}</b>${km1(vis[0])} · ${stockTxt(vis[0])}`
       : `Best at <b>${esc(storeName(best.s))}</b>${km1(best)} · ${stockTxt(best)}`;
@@ -232,7 +240,7 @@
       <div class="body">
         <p class="brand">${esc(it.brand)}</p>
         <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
-        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong><s>${fmt(best.orig)}</s></p>
+        <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong>${it.clr ? '' : `<s>${fmt(best.orig)}</s>`}</p>
         <p class="where">${where}</p>
         <div class="actions"><a class="btn" href="${esc(url)}" target="_blank" rel="noopener">View deal</a>${more}</div>
       </div></article>`;
@@ -262,9 +270,9 @@
     $('dsub').textContent = `${vis.length} store${vis.length === 1 ? '' : 's'} with this discount${vis.length !== it.n ? ` (${it.n} in Canada in total)` : ''}`;
     $('dlist').innerHTML = listed.map(d => `<li>
       <span class="nm">${esc(storeName(d.s))}${DIST ? ' · ' + Math.round(DIST[d.s]) + ' km' : ''}</span>
-      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}<s>${fmt(d.orig)}</s></span>
+      <span class="pr">${fmt(d.sale)}${d.saleMax && d.saleMax !== d.sale ? '–' + fmt(d.saleMax) : ''}${it.clr ? '' : `<s>${fmt(d.orig)}</s>`}</span>
       <span class="ad">${esc(STORES[d.s] ? STORES[d.s][2] : '')}</span>
-      <span class="st">${offLabel(d)} off · ${stockTxt(d)}</span>
+      <span class="st">${offLabel(d)} · ${stockTxt(d)}</span>
       <a class="go" href="${esc(storeUrl(it, d.s))}" target="_blank" rel="noopener">Open at this store</a></li>`).join('');
     $('dlg').showModal();
     $('dlg').scrollTop = 0;
@@ -275,8 +283,8 @@
     const when = new Date(D.generated);
     const day = when.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
     const fresh = ITEMS.some(i => i.first) ? `<span><b>${ITEMS.filter(isNew).length.toLocaleString()}</b> new in latest update</span>` : '';
-    $('stats').innerHTML = `<span><b>${ITEMS.length.toLocaleString()}</b> deals</span>${fresh}<span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> stores checked across Canada</span><span>Updated <b>${esc(day)}</b></span>`;
-    $('foot').innerHTML = `Prices, stock and photos come from homedepot.ca for ${D.storeCount} stores in every province, scanned ${esc(when.toLocaleString('en-CA'))}. Home Depot prices are mostly the same at every store, so what differs between stores is which ones have the item in stock; a deal counts only if the item is in stock at the store, and an item 50% off or more at every scanned store is left out. The scan looks at items on sale (Savings) at 50% or more off the regular price; clearance-badged items are not included because homedepot.ca shows no regular price for them, so their discount cannot be checked. Open the product page, then pick the store shown here as your store to see the same price and stock. Product photos load from Home Depot's image servers and belong to Home Depot and its brands. This is an independent tool and is not affiliated with The Home Depot.`;
+    $('stats').innerHTML = `<span><b>${ITEMS.filter(i => !i.clr).length.toLocaleString()}</b> deals at 50% off or more</span><span><b>${ITEMS.filter(i => i.clr).length.toLocaleString()}</b> clearance</span>${fresh}<span><b>${one.toLocaleString()}</b> at only one store</span><span><b>${D.storeCount}</b> stores checked across Canada</span><span>Updated <b>${esc(day)}</b></span>`;
+    $('foot').innerHTML = `Prices, stock and photos come from homedepot.ca for ${D.storeCount} stores in every province, scanned ${esc(when.toLocaleString('en-CA'))}. Home Depot prices are mostly the same at every store, so what differs between stores is which ones have the item in stock; a deal counts only if the item is in stock at the store, and an item 50% off or more at every scanned store is left out. The scan looks at items on sale (Savings) at 50% or more off the regular price; clearance items are listed separately and marked Clearance with no percentage, because homedepot.ca shows no regular price for them, so their discount cannot be checked (they are hidden when the minimum discount is above 50%). Clearance is final sale in most cases and stock is often very low. Open the product page, then pick the store shown here as your store to see the same price and stock. Product photos load from Home Depot's image servers and belong to Home Depot and its brands. This is an independent tool and is not affiliated with The Home Depot.`;
   }
 
   function wire() {
@@ -287,6 +295,7 @@
     $('radius').addEventListener('change', e => set('radius', +e.target.value));
     $('prov').addEventListener('change', e => set('prov', e.target.value));
     $('maxn').addEventListener('change', e => set('maxn', +e.target.value));
+    $('kind').addEventListener('change', e => set('kind', e.target.value));
     $('minpct').addEventListener('change', e => set('minpct', +e.target.value));
     $('sort').addEventListener('change', e => set('sort', e.target.value));
     $('when').addEventListener('change', e => set('when', +e.target.value));
@@ -308,11 +317,12 @@
     if (![0, 1, 3, 7].includes(state.when)) state.when = 0;
     $('when').value = String(state.when);
     if (state.prov && !PROV.includes(state.prov)) state.prov = '';
-    $('prov').value = state.prov; $('store').value = String(state.store); $('radius').value = String(state.radius); $('maxn').value = String(state.maxn); $('minpct').value = String(state.minpct); $('sort').value = state.sort;
+    if (!['', 'sale', 'clr'].includes(state.kind)) state.kind = '';
+    $('kind').value = state.kind; $('prov').value = state.prov; $('store').value = String(state.store); $('radius').value = String(state.radius); $('maxn').value = String(state.maxn); $('minpct').value = String(state.minpct); $('sort').value = state.sort;
   }
 
-  fetch('../data/home-depot/deals.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(data => { prepare(data); storeOpts(); wire(); summary(); render(true); })
+  Promise.all(['deals', 'clearance'].map(n => fetch('../data/home-depot/' + n + '.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })))
+    .then(([data, clr]) => { prepare(data, clr); storeOpts(); wire(); summary(); render(true); })
     .catch(err => { $('stats').textContent = 'The deals could not load (' + err.message + '). Reload the page to try again.'; });
 })();
 </script>
