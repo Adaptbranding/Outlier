@@ -1,7 +1,7 @@
 import json, re, sys, math
 
 raw_path, out_path = sys.argv[1], sys.argv[2]
-retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default, also Mark's), "hh", "ra" or "am" (Amazon.ca: one online "store")
+retailer = sys.argv[3] if len(sys.argv) > 3 else "ct"  # "ct" (default, also Mark's), "hh", "ra", "hd" (Home Depot, all of Canada) or "am" (Amazon.ca: one online "store")
 with open(raw_path, encoding="utf-8") as f:
     raw = json.load(f)
 
@@ -38,8 +38,9 @@ for st in raw["stores"]:
     sid, name, addr, lat, lng = st
     if not isinstance(sid, int):
         raise ValueError(f"bad store id {sid!r}")
-    lat = lat if isinstance(lat, (int, float)) and 41 < lat < 57 else None
-    lng = lng if isinstance(lng, (int, float)) and -96 < lng < -74 else None
+    lat_lo, lat_hi, lng_lo, lng_hi = (41, 84, -142, -52) if retailer == "hd" else (41, 57, -96, -74)  # Home Depot covers every province
+    lat = lat if isinstance(lat, (int, float)) and lat_lo < lat < lat_hi else None
+    lng = lng if isinstance(lng, (int, float)) and lng_lo < lng < lng_hi else None
     stores.append([sid, s(name, 80), s(addr, 200), lat, lng])
 
 cats = [s(c, 60) for c in raw["cats"]]
@@ -58,6 +59,9 @@ if retailer == "hh":
 elif retailer == "am":
     path_re = re.compile(r"^/[A-Za-z0-9%_.\-]{1,200}/dp/[A-Z0-9]{10}$")
     img_re = re.compile(r"^https://m\.media-amazon\.com/images/I/[A-Za-z0-9%+_.\-]+\.(jpg|png)$")
+elif retailer == "hd":
+    path_re = re.compile(r"^/product/[a-z0-9\-]+/\d+$")
+    img_re = re.compile(r"^https://images\.homedepot\.ca/productimages/p_[A-Za-z0-9\-]+\.jpg(\?product-images=[a-z]+)?$")
 elif retailer == "ra":
     path_re = re.compile(r"^/en/product/[a-z0-9\-]+$")
     img_re = re.compile(r"^https://cdn\.rona\.ca/images/[A-Za-z0-9_\-]+\.jpg$")

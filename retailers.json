@@ -33,6 +33,14 @@
       "live": true
     },
     {
+      "id": "home-depot",
+      "name": "Home Depot",
+      "path": "home-depot/",
+      "logo": null,
+      "tagline": "All Canadian stores \u00b7 50% off or more",
+      "live": true
+    },
+    {
       "id": "amazon",
       "name": "Amazon.ca",
       "path": "amazon/",

@@ -151,6 +151,15 @@ Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_A
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).
 
+## Home Depot (all Canadian stores)
+
+Home Depot Canada charges the same price at every store, so the store-level difference is which stores have the item in stock. The page covers all 183 stores in every province (Province filter).
+
+1. Open any homedepot.ca page in Chrome (no sign-in needed), paste `refresh/keepalive.js`, then paste `refresh/hd_scan.js`.
+2. It pages the sale filters at one base store (Aurora), keeps items 50% or more off, checks price and stock for each at all 183 stores, then reads links, photos and categories. About 20 minutes. Poll `window.__hd.state` until it is `done` (`error` shows `window.__hd.err`; it stops on any non-200 answer, so do not retry in a loop).
+3. Download `window.__raw` as a file, stage it, then `python3 -I refresh/build_data.py <raw.json> data/home-depot/deals.json hd`.
+4. Clearance-badged items are not included: homedepot.ca shows no regular price for them, so 50% off cannot be checked. Items on sale only at other stores (not at the base store) are not seen.
+
 ## New-deal tracking
 
 `build_data.py` keeps each item's first-seen date (row index 9, `YYYY-MM-DD`) by reading the file it is about to overwrite, so always build straight into `data/<retailer>/deals.json` (never a temp path, or every item loses its date and nothing shows as new). Items missing from the previous file get today's date; items from before tracking stay unknown (empty) until the next day. The site's "Show" filter and the search page's "New" badge use that date against each file's `generated` day.
