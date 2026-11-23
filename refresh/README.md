@@ -147,6 +147,12 @@ has 71 extra hunting queries (clothing, blinds, stands, calls, optics, shooting 
 The merge picks the brand that starts earliest in the first five words, tags clearly-hunting titles with the Hunting category, uses the link text when a
 search card's heading is only the brand, and has a small `EXCLUDE` list for items checked by hand (search-card list price belonged to another variant).
 
+Added 2026-11-23 (owner: large appliances, industrial sinks, cabinets and related products): `amazon_wide_scan.js` has two more query groups, `EXTRA4[10]` (about 55 large-appliance
+searches: refrigerators, freezers, washers and dryers, dishwashers, ranges, cooktops, ovens, hoods, air conditioners, dehumidifiers, water heaters) and `EXTRA4[11]` (about 50 sink, faucet,
+commercial kitchen, vanity, cabinet, workbench and countertop searches), plus about 50 appliance and kitchen/bath brands. They are categories "Large Appliances" and "Kitchen, Bath & Cabinets"
+(`CATS` in `amazon_merge.py`; the indices must match the `Q` keys). The full run is now 728 pages (about 35 min). To run only the new groups set `window.__AW_ONLY_EXTRA4 = true`.
+The merge now drops cards whose link has no product name (sponsored cards, whose titles are often just a brand), so `dropped.bad_url` stays 0. First run: only 6 items qualified in the new groups, which is normal, since 50% off at $100+ is rare for appliances.
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).

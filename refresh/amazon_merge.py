@@ -37,7 +37,7 @@ def brand_of(title):
                 best = (k, b)
     return best[1] if best else ""
 
-CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden"]
+CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets"]
 SALE_CAT = {"Electronics": 5, "Tools & Home Improvement": 6, "Sports & Outdoors": 7, "Home & Kitchen": 8, "Patio, Lawn & Garden": 9}
 
 # Deals-list items (and search hits from other groups) whose title is clearly hunting gear also get the Hunting category.
@@ -62,12 +62,13 @@ def img_ok(u):
 MAX_OFF = 0.8
 # Items checked by hand whose search-card list price belongs to another variant (Stanley Quencher 30 oz: card said $129.97, product page lists $51.99).
 EXCLUDE = {"B0DCF66SX6"}
+SLUG_RE = re.compile(r"^/[A-Za-z0-9%_.\-]{1,200}/dp/[A-Z0-9]{10}$")
 dropped_inflated = 0
 items = {}
 wide = json.load(open(wide_path, encoding="utf-8"))
 for w in wide:
     asin = w["asin"]
-    if asin in EXCLUDE:
+    if asin in EXCLUDE or not SLUG_RE.match(w["path"] or ""):  # no product name in the link = sponsored card with an unreliable title
         dropped_inflated += 1
         continue
     if w["eff"] < w["was"] * (1 - MAX_OFF) or not (ANY or brand_of(w["t"])):
@@ -82,7 +83,7 @@ if sale_path:
         sale_total += 1
         b = brand_of(it[1])
         d0 = it[7][0]
-        if not (ANY or b) or d0[1] < d0[3] * (1 - MAX_OFF):
+        if not (ANY or b) or d0[1] < d0[3] * (1 - MAX_OFF) or not SLUG_RE.match(it[2] or ""):
             continue
         sale_kept += 1
         cidx = sorted({SALE_CAT[cats[c]] for c in it[5] if cats[c] in SALE_CAT})
