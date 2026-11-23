@@ -26,7 +26,7 @@
     // 2. every store
     H.state = 'stores';
     const sd = await J('/api/storesvc/v1/stores?pageSize=200&lang=en');
-    const sl = sd.stores || sd.data || sd;
+    const sl = (sd.stores || sd.data || sd).filter(s => s.name !== '7274');   // 7274 is the "Online" pseudo-store, not a physical store
     for (const s of sl) {
       const pc = ((s.address && s.address.postalCode) || '').replace(/\s/g, ''), row = {};
       for (let i = 0; i < codes.length; i += 34) {
