@@ -75,32 +75,39 @@ paging), so stepping by 192 is right. bulk-product-data answers up to 200 items 
 
 1. Open https://www.rona.ca/en/promotions/clearance in a new tab. Do not open rona.ca in any other tab while the scan runs: the selected
    store is a cookie shared by every rona.ca tab (a test in another tab once put Welland's clearance under Rodney).
-2. Paste `refresh/rona_scan.js` (background job, `window.__RA`). Poll with
+2. Paste `refresh/rona_scan.js` (background job, `window.__RA`; about 75 minutes). Poll with
    `JSON.stringify({phase:__RA.phase,done:__RA.done,total:__RA.total,pages:__RA.pages,errs:__RA.errs.length,incomplete:__RA.incomplete.length,aborted:__RA.aborted,finished:__RA.finished})`.
 3. When finished: `window.__raDownload(window.__raExport(), 'rona-ontario-outliers-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`.
 4. Stage that file from Downloads, run `python3 -I refresh/build_data.py <raw.json> data/rona/deals.json ra`.
 5. Checks before pushing: stores >= 100, items >= 3000, dropped.bad_url == 0, with_image >= 90% of items.
 6. Commit only `data/rona/deals.json` and push to `main`.
 
-How it works: each of the 115 Ontario stores is selected by cookie (`RonaWCCookie.stores.selected` and `RonaWCCookie.storesize`), and its
-whole clearance list is read across all departments, 96 items per page (the most the site allows; asking for more still returns 96).
-Each product on the list carries the site's category code (e.g. `01-131`), and page 1 of each department, read once at a big-box store,
-maps the codes to department names (one code per department; all 18 checked 2026-11-19). Before 2026-11-19 every department was read
-separately at every store, so a store with no clearance still took 18 requests. Items priced at 50% off or more with stock in store are kept;
-items at every scanned store are dropped by build_data.py (they are not outliers). The selected store is set before every request and
-checked on every page; a page for the wrong store marks that store incomplete (retried at the end) instead of mixing data. The original
-selected store is restored when the job ends. It stops by itself on a 403/429/503 or a challenge page and never tries to get around one;
-unfinished stores are listed as incomplete and keep their previous deals.
+How it works: every product at 50% off or more with stock at the store, from both places rona.ca lists discounted products (its
+Deals & Flyer section has only these two): the clearance list and the weekly deals (added 2026-11-23). Each of the 115 Ontario stores is
+selected by cookie (`RonaWCCookie.stores.selected` and `RonaWCCookie.storesize`), and for each store the scan reads its whole clearance list
+and the weekly deals with the site's own "In stock at <store>" filter (`searchFilter=inStockStore`), across all departments, 96 items per
+page (the most the site allows). Weekly deals are about 25,000 products, but in stock at one store they are about 1,700 at a big store
+(18 pages) and a few hundred at a small one; deals here need stock anyway, so the filter loses nothing. Weekly-deal prices differ from
+store to store (2026-11-23: Welland vs Etobicoke 89 of 96 the same, Bancroft vs Etobicoke 51 of 71, and the lists themselves differ), so
+each store's own list is read. A product on both lists at a store keeps the lower price. The clearance list already shows in-stock items
+only, so the filter does not shorten it. About 2,000 clearance pages plus about 900 weekly pages: roughly 75 minutes.
+Each product on the lists carries the site's category code (e.g. `01-131`); page 1 of each department, read once at a big-box store, maps
+the codes to department names (one code per department): the 18 clearance departments plus the 2 that only weekly deals have (Sports,
+Recreation and Toys; Farm Supplies). Items at every scanned store are dropped by build_data.py (they are not outliers). The selected store is
+set before every request and checked on every page; a page for the wrong store marks that store incomplete (retried at the end) instead of
+mixing data. The original selected store is restored when the job ends. It stops by itself on a 403/429/503 or a challenge page and never
+tries to get around one; unfinished stores are listed as incomplete and keep their previous deals.
+Trial 2026-11-23 at 4 stores: Etobicoke 1,608 -> 1,637 deals, Welland 877 -> 906, Bancroft 53 -> 55, Rodney 0 -> 4 (weekly deals added 69
+store deals); 91 pages in 2 min 18 s, no errors.
 
 Once a day only: on 2026-11-19, after two full RONA scans plus tests in one day (several thousand requests within a few hours), rona.ca
 started answering every request with a 403 and a challenge page; one scan a day had run without trouble for three days. The block
 lifted on its own within about an hour and a half (a third scan then ran cleanly). Avoid extra RONA scans on the same day, and never try
 to get past a challenge page (if one shows, the owner can clear it in their own browser).
 
-Why RONA reads clearance only: rona.ca has no discount filter, so the other discounted items sit in the weekly-deals (flyer) lists
-(`RonaPromoFlyerView`, same department ids). Tested 2026-11-18 at 6 Ontario stores (Tools and Bathroom): 23 items were 50% off or more,
-and none had a different price from store to store (only the in-store stock differed). Each flyer page is about 3.3 MB and a store needs
-about 125 of them, roughly 45 GB for all 115 stores, so the flyer lists are not scanned.
+Before 2026-11-23 RONA read clearance only: rona.ca has no discount filter or discount sort, and reading every store's whole weekly-deals
+list (about 280 pages of 3.4 MB per store, the list stops after about page 100 so it has to go department by department) would have been
+about 30,000 pages a day. The site's in-stock filter is what makes weekly deals affordable.
 
 ## Mark's
 

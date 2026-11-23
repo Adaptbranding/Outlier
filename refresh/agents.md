@@ -48,7 +48,7 @@ Open https://www.rona.ca/en/promotions/clearance in your tab. First check that t
 `const r=await fetch('/en/promotions/clearance',{credentials:'include'});const h=await r.text();JSON.stringify({status:r.status,challenge:/captcha-delivery|geo\.captcha/i.test(h.slice(0,5000))})`.
 If the status is 403, 429 or 503 or challenge is true, stop: close your tab and report "RONA blocked" with the status (do not retry and do
 not open rona.ca again). Otherwise paste refresh/rona_scan.js, then refresh/keepalive.js, check `window.__keepState` is "open", poll with
-the runbook's RONA one-liner (about an hour) and export with the runbook's RONA step 3.
+the runbook's RONA one-liner (about 75 minutes) and export with the runbook's RONA step 3.
 
 ## Mark's
 
