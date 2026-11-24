@@ -160,6 +160,11 @@ commercial kitchen, vanity, cabinet, workbench and countertop searches), plus ab
 (`CATS` in `amazon_merge.py`; the indices must match the `Q` keys). The full run is now 728 pages (about 35 min). To run only the new groups set `window.__AW_ONLY_EXTRA4 = true`.
 The merge now drops cards whose link has no product name (sponsored cards, whose titles are often just a brand), so `dropped.bad_url` stays 0. First run: only 6 items qualified in the new groups, which is normal, since 50% off at $100+ is rare for appliances.
 
+Added 2026-11-24 (owner: kitchen appliances, outdoor power equipment, snow removal and tools): `EXTRA5` has four more query groups, keys 12 to 15: small kitchen appliances (coffee, air fryers, blenders, cookware, about 58 searches),
+outdoor power equipment (mowers, trimmers, blowers, chainsaws, generators, about 56), snow removal (blowers, shovels, plows, ice melt, about 35) and power and hand tools (about 85), plus about 60 more brands. Categories
+"Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal" and "Tools" were appended to `CATS` in `amazon_merge.py` (indices 12 to 15). The full run is now 1198 search pages (about 55 min, so allow
+for it) plus the 22-page sale list. To run only the new groups set `window.__AW_ONLY_EXTRA5 = true`. First run: 26 kitchen, 3 outdoor power, 7 tool and 0 snow-removal items qualified; 50% off on snow gear is rare in late November.
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).

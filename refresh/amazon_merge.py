@@ -37,7 +37,7 @@ def brand_of(title):
                 best = (k, b)
     return best[1] if best else ""
 
-CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets"]
+CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets", "Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal", "Tools"]
 SALE_CAT = {"Electronics": 5, "Tools & Home Improvement": 6, "Sports & Outdoors": 7, "Home & Kitchen": 8, "Patio, Lawn & Garden": 9}
 
 # Deals-list items (and search hits from other groups) whose title is clearly hunting gear also get the Hunting category.
