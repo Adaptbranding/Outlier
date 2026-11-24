@@ -37,8 +37,8 @@ def brand_of(title):
                 best = (k, b)
     return best[1] if best else ""
 
-CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets", "Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal", "Tools", "Clothing & Accessories", "Shoes & Boots", "Automotive", "Pets", "Health & Beauty"]
-SALE_CAT = {"Electronics": 5, "Tools & Home Improvement": 6, "Sports & Outdoors": 7, "Home & Kitchen": 8, "Patio, Lawn & Garden": 9, "Clothing, Shoes & Accessories": 16, "Automotive": 18, "Pet Supplies": 19, "Beauty & Personal Care": 20, "Health & Personal Care": 20}
+CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets", "Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal", "Tools", "Clothing & Accessories", "Shoes & Boots", "Automotive", "Pets", "Health & Beauty", "Food & Grocery", "Candy & Chocolate"]
+SALE_CAT = {"Electronics": 5, "Tools & Home Improvement": 6, "Sports & Outdoors": 7, "Home & Kitchen": 8, "Patio, Lawn & Garden": 9, "Clothing, Shoes & Accessories": 16, "Automotive": 18, "Pet Supplies": 19, "Beauty & Personal Care": 20, "Health & Personal Care": 20, "Grocery & Gourmet Food": 21}
 
 # Deals-list items (and search hits from other groups) whose title is clearly hunting gear also get the Hunting category.
 HUNT_RE = re.compile(r"\b(hunting|rifle ?scope|riflescope|binoculars?|rangefinders?|trail cam\w*|game cam\w*|tree ?stands?|ground blinds?|hunting blinds?|crossbows?|archery|compound bow|thermal (?:scope|monocular|imag\w*)|spotting scope|deer|turkey call|duck call|decoys?|gun (?:safe|case|rack|cleaning)|rifle|shooting (?:rest|bench|glasses)|bipod|camo|blaze orange|game processing)\b", re.I)
@@ -56,6 +56,23 @@ def relevant_cats(cs, title):
     out = [c for c in cs if c not in REL_RE or REL_RE[c].search(title or "")]
     return out if out else list(cs)
 SHOE_RE = re.compile(r"\b(shoes?|boots?|sneakers?|sandals?|slippers?|loafers?|clogs?|footwear|trainers?|moccasins?|oxfords?)\b", re.I)
+# Food (21) and Candy (22) are separate categories: a food item whose title is clearly candy or chocolate is filed under Candy & Chocolate, in both the search and the sale-list paths.
+CANDY_RE = re.compile(r"\b(candy|candies|chocolates?|gummy|gummies|licorice|lollipops?|jelly beans?|caramels?|toffee|fudge|marshmallows?|chocolate truffles?|advent calendar|lindt|ferrero|godiva|haribo|hershey'?s?|toblerone|cadbury|skittles|m&m'?s|kit ?kat|twizzlers|reese'?s)\b", re.I)
+# Searches such as "freeze dried food" also return dog and cat food; those belong to Pets (19), not Food or Candy.
+PETFOOD_RE = re.compile(r"\b(dogs?|cats?|puppy|puppies|kittens?|pets?|canine|feline|aquarium|bird seed|horse)\b", re.I)
+# Grocery list prices set by marketplace sellers are the least reliable on the site (24 cans of soup "listed" at $770, 24 energy drinks at $220), so Food and Candy use a stricter cap
+# than the 80% used elsewhere: an item more than 65% off its list price is dropped. NOT_FOOD_RE drops search results that are not food at all (a kayak repair kit, a knife set).
+FOOD_MAX_OFF = 0.65
+NOT_FOOD_RE = re.compile(r"\b(kayaks?|rafts?|inflatable|knife|knives|facial|essence|serum|skincare|machines?|breville|makers?|brewers?|grinder|blender|toothbrush|vacuum|camera|speaker|headphones?|watch|bike|tent|mattress|chair|desk|shoes?|boots?|jacket)\b", re.I)
+def food_or_candy(cs, title):
+    cs = set(cs)
+    if NOT_FOOD_RE.search(title or ""):
+        cs -= {21, 22}
+    if cs & {21, 22} and PETFOOD_RE.search(title or ""):
+        cs = (cs - {21, 22}) | {19}
+    elif 21 in cs and CANDY_RE.search(title or ""):
+        cs = (cs - {21}) | {22}
+    return sorted(cs)
 def tag_hunting(cs, title):
     return sorted(set(cs) | {3}) if HUNT_RE.search(title or "") else sorted(cs)
 
@@ -89,8 +106,16 @@ for w in wide:
         dropped_inflated += 1
         continue
     ttl = title_of(w["t"], w["path"])
+    fc = food_or_candy(w["cats"], ttl)
+    if not fc:
+        dropped_inflated += 1
+        continue
+    if set(fc) & {21, 22} and not set(fc) - {21, 22}:
+        if w["eff"] < w["was"] * (1 - FOOD_MAX_OFF):
+            dropped_inflated += 1
+            continue
     wc = sorted((set(w["cats"]) - {16, 17}) | {20}) if FRAG_RE.search(ttl or "") and set(w["cats"]) & {16, 17} else w["cats"]
-    items[asin] = [asin, ttl, w["path"], brand_of(w["t"]), asin, tag_hunting(relevant_cats(wc, ttl), w["t"]), 0, [[0, w["eff"], None, w["was"], None]], img_ok(w.get("img")), w.get("note") or ""]
+    items[asin] = [asin, ttl, w["path"], brand_of(w["t"]), asin, tag_hunting(food_or_candy(relevant_cats(wc, ttl), ttl), w["t"]), 0, [[0, w["eff"], None, w["was"], None]], img_ok(w.get("img")), w.get("note") or ""]
 sale_kept = sale_total = 0
 if sale_path:
     sale = json.load(open(sale_path, encoding="utf-8"))
@@ -107,6 +132,9 @@ if sale_path:
             cidx = sorted((set(cidx) - {16}) | {20})
         if 16 in cidx and SHOE_RE.search(it[1] or ""):  # the sale list's Clothing, Shoes & Accessories department: footwear goes to Shoes & Boots
             cidx = sorted((set(cidx) - {16}) | {17})
+        cidx = food_or_candy(cidx, it[1])
+        if not cidx or (set(cidx) & {21, 22} and not set(cidx) - {21, 22} and d0[1] < d0[3] * (1 - FOOD_MAX_OFF)):
+            continue
         if it[0] in items:
             items[it[0]][5] = tag_hunting(set(items[it[0]][5]) | set(cidx), it[1])
             continue

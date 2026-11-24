@@ -179,6 +179,11 @@ Health & Beauty (`CATS` 18 to 20 in `amazon_merge.py`). `amazon_scan.js` now als
 category (`REL_RE`); perfume that turns up in the clothing department or clothing searches is filed under Health & Beauty. To run only these groups set `window.__AW_ONLY_EXTRA7 = true` (about 20 min). The full search run is now
 about 2030 pages (about 90 min). Pasting a trimmed script with only the new groups is fine when merging with earlier same-day runs (the merge ignores the scan's own brand field).
 
+Added 2026-11-24 (owner: food and candy): `EXTRA8` has two more query groups, about 160 searches. Key 21 is food (emergency and freeze-dried food, coffee, tea, nuts, snacks, pantry, gift baskets, baby formula) and key 22 is candy
+(chocolate, gummies, advent calendars, gift boxes, major candy brands); they are `CATS` 21 and 22 ("Food & Grocery", "Candy & Chocolate") in `amazon_merge.py`, and a food item whose title is clearly candy or chocolate (`CANDY_RE`) is moved to
+Candy & Chocolate in both the search and sale-list paths. `amazon_scan.js` also reads the deals list's Grocery & Gourmet Food department (6967215011). To run only these groups set `window.__AW_ONLY_EXTRA8 = true` (about 6 min).
+The full search run is now about 2350 pages (about 105 min). The $100 list-price floor still applies, so most groceries never qualify; only bulk, case, gift and emergency-food listings do.
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).
