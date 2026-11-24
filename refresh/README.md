@@ -165,6 +165,13 @@ outdoor power equipment (mowers, trimmers, blowers, chainsaws, generators, about
 "Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal" and "Tools" were appended to `CATS` in `amazon_merge.py` (indices 12 to 15). The full run is now 1198 search pages (about 55 min, so allow
 for it) plus the 22-page sale list. To run only the new groups set `window.__AW_ONLY_EXTRA5 = true`. First run: 26 kitchen, 3 outdoor power, 7 tool and 0 snow-removal items qualified; 50% off on snow gear is rare in late November.
 
+Added 2026-11-24 (owner: name-brand clothes and name-brand shoes/boots): `EXTRA6` has two more query groups, key 16 (clothing: jackets, parkas, bibs, base layers, jeans, gloves, plus Canada Goose, North Face, Carhartt,
+Patagonia, Levi's and similar, about 70 searches) and key 17 (shoes and boots: running, hiking, winter, work, dress, plus Sorel, Merrell, Keen, Timberland, Blundstone, Hoka and similar, about 70), and about 70 clothing and footwear
+brands. Categories "Clothing & Accessories" and "Shoes & Boots" are `CATS` 16 and 17 in `amazon_merge.py`. `amazon_scan.js` also reads the deals list's Clothing, Shoes & Accessories department, as its eight sub-departments
+(the whole department returned 500 products, Amazon's cap per query); the merge puts footwear titles in Shoes & Boots and drops perfume (that department carries it). To run only the new search groups set
+`window.__AW_ONLY_EXTRA6 = true` (about 12 min). The full search run is now about 1474 pages (about 65 min); on 2026-11-24 the new groups were run alone and merged with the same day's other groups.
+`__awItems` of two runs can be concatenated (union the `cats` of a repeated ASIN) before merging. The $100 list-price floor applies, so cheaper clothing never shows: 58 clothing and 85 footwear items qualified.
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).
