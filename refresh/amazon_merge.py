@@ -37,13 +37,24 @@ def brand_of(title):
                 best = (k, b)
     return best[1] if best else ""
 
-CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets", "Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal", "Tools", "Clothing & Accessories", "Shoes & Boots"]
-SALE_CAT = {"Electronics": 5, "Tools & Home Improvement": 6, "Sports & Outdoors": 7, "Home & Kitchen": 8, "Patio, Lawn & Garden": 9, "Clothing, Shoes & Accessories": 16}
+CATS = ["Furniture", "Outdoor & Recreation", "Camping", "Hunting", "Farm Equipment", "Electronics", "Tools & Home Improvement", "Sports & Outdoors", "Home & Kitchen", "Patio, Lawn & Garden", "Large Appliances", "Kitchen, Bath & Cabinets", "Kitchen Appliances", "Outdoor Power Equipment", "Snow Removal", "Tools", "Clothing & Accessories", "Shoes & Boots", "Automotive", "Pets", "Health & Beauty"]
+SALE_CAT = {"Electronics": 5, "Tools & Home Improvement": 6, "Sports & Outdoors": 7, "Home & Kitchen": 8, "Patio, Lawn & Garden": 9, "Clothing, Shoes & Accessories": 16, "Automotive": 18, "Pet Supplies": 19, "Beauty & Personal Care": 20, "Health & Personal Care": 20}
 
 # Deals-list items (and search hits from other groups) whose title is clearly hunting gear also get the Hunting category.
 HUNT_RE = re.compile(r"\b(hunting|rifle ?scope|riflescope|binoculars?|rangefinders?|trail cam\w*|game cam\w*|tree ?stands?|ground blinds?|hunting blinds?|crossbows?|archery|compound bow|thermal (?:scope|monocular|imag\w*)|spotting scope|deer|turkey call|duck call|decoys?|gun (?:safe|case|rack|cleaning)|rifle|shooting (?:rest|bench|glasses)|bipod|camo|blaze orange|game processing)\b", re.I)
-# The sale list's Clothing, Shoes & Accessories department also carries perfume; it is not clothing, so it is dropped.
+# The sale list's Clothing, Shoes & Accessories department (and clothing searches) also carry perfume; it is filed under Health & Beauty (20), not clothing.
 FRAG_RE = re.compile(r"\b(fragrances?|parfum|eau de|cologne|toilette|perfume)\b", re.I)
+# A search for "dog fence" also returns security cameras. For the search-only groups Automotive (18), Pets (19) and Health & Beauty (20) the title must look like that
+# category, otherwise the category is removed, but only when the item has another category (Jackery found by "car battery" stays in Camping); an item with only that category keeps it.
+# Sale-list departments are Amazon's own, so they are trusted.
+REL_RE = {
+    18: re.compile(r"\b(car|cars|auto|automotive|truck|trucks|suv|vehicle|vehicles|tires?|tyres?|wheels?|jump ?starter|dash ?cam|batter(?:y|ies)|motor|motorcycle|engine|trailer|hitch|wipers?|obd\w*|brakes?|bumper|windshield|tonneau|roof rack|cargo|compressor|floor jack|ramps?|ev charger|helmet|throttle|actuator|fits select|oem|original equipment|dorman|rotor|axle|transmission|exhaust|headlights?|floor mats?|car seat|booster)\b", re.I),
+    19: re.compile(r"\b(dogs?|cats?|pets?|puppy|puppies|kitten|aquarium|fish|birds?|reptile|terrarium|litter|horse|kennel|crate|leash|collar|treats?|purina|orijen|royal canin|blue buffalo|bully|petsafe|kong|nylabone|furminator|scratching|feeder|chew)\b", re.I),
+    20: re.compile(r"\b(toothbrush|dental|oral|floss|flosser|hair|shaver|trimmer|epilator|skin|skincare|face|facial|mask|makeup|beauty|perfume|parfum|eau de|cologne|toilette|fragrances?|massag\w*|heating pad|tens|blood pressure|oximeter|thermometer|cpap|vitamins?|protein|collagen|supplements?|omega|fish oil|creatine|scale|hearing|reading glasses|sunscreen|lotion|cream|serum|moisturi\w*|cleanser|nail|laser|wax|shampoo|conditioner|brush|dryer|straightener|curler|curling|razor|foot|sonicare|oral-b|waterpik|theragun|hypervolt|neck|knee|posture|sleep|eye|lip|mascara|foundation)\b", re.I),
+}
+def relevant_cats(cs, title):
+    out = [c for c in cs if c not in REL_RE or REL_RE[c].search(title or "")]
+    return out if out else list(cs)
 SHOE_RE = re.compile(r"\b(shoes?|boots?|sneakers?|sandals?|slippers?|loafers?|clogs?|footwear|trainers?|moccasins?|oxfords?)\b", re.I)
 def tag_hunting(cs, title):
     return sorted(set(cs) | {3}) if HUNT_RE.search(title or "") else sorted(cs)
@@ -71,13 +82,15 @@ items = {}
 wide = json.load(open(wide_path, encoding="utf-8"))
 for w in wide:
     asin = w["asin"]
-    if asin in EXCLUDE or FRAG_RE.search(title_of(w["t"], w["path"]) or "") or not SLUG_RE.match(w["path"] or ""):  # no product name in the link = sponsored card with an unreliable title
+    if asin in EXCLUDE or not SLUG_RE.match(w["path"] or ""):  # no product name in the link = sponsored card with an unreliable title
         dropped_inflated += 1
         continue
     if w["eff"] < w["was"] * (1 - MAX_OFF) or not (ANY or brand_of(w["t"])):
         dropped_inflated += 1
         continue
-    items[asin] = [asin, title_of(w["t"], w["path"]), w["path"], brand_of(w["t"]), asin, tag_hunting(w["cats"], w["t"]), 0, [[0, w["eff"], None, w["was"], None]], img_ok(w.get("img")), w.get("note") or ""]
+    ttl = title_of(w["t"], w["path"])
+    wc = sorted((set(w["cats"]) - {16, 17}) | {20}) if FRAG_RE.search(ttl or "") and set(w["cats"]) & {16, 17} else w["cats"]
+    items[asin] = [asin, ttl, w["path"], brand_of(w["t"]), asin, tag_hunting(relevant_cats(wc, ttl), w["t"]), 0, [[0, w["eff"], None, w["was"], None]], img_ok(w.get("img")), w.get("note") or ""]
 sale_kept = sale_total = 0
 if sale_path:
     sale = json.load(open(sale_path, encoding="utf-8"))
@@ -86,10 +99,12 @@ if sale_path:
         sale_total += 1
         b = brand_of(it[1])
         d0 = it[7][0]
-        if not (ANY or b) or d0[1] < d0[3] * (1 - MAX_OFF) or FRAG_RE.search(it[1] or "") or not SLUG_RE.match(it[2] or ""):
+        if not (ANY or b) or d0[1] < d0[3] * (1 - MAX_OFF) or not SLUG_RE.match(it[2] or ""):
             continue
         sale_kept += 1
         cidx = sorted({SALE_CAT[cats[c]] for c in it[5] if cats[c] in SALE_CAT})
+        if 16 in cidx and FRAG_RE.search(it[1] or ""):
+            cidx = sorted((set(cidx) - {16}) | {20})
         if 16 in cidx and SHOE_RE.search(it[1] or ""):  # the sale list's Clothing, Shoes & Accessories department: footwear goes to Shoes & Boots
             cidx = sorted((set(cidx) - {16}) | {17})
         if it[0] in items:

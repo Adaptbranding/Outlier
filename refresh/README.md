@@ -172,6 +172,13 @@ brands. Categories "Clothing & Accessories" and "Shoes & Boots" are `CATS` 16 an
 `window.__AW_ONLY_EXTRA6 = true` (about 12 min). The full search run is now about 1474 pages (about 65 min); on 2026-11-24 the new groups were run alone and merged with the same day's other groups.
 `__awItems` of two runs can be concatenated (union the `cats` of a repeated ASIN) before merging. The $100 list-price floor applies, so cheaper clothing never shows: 58 clothing and 85 footwear items qualified.
 
+Added 2026-11-24 (owner: automotive, home, garden, pets, health and beauty): `EXTRA7` has five more query groups, about 280 searches. Keys 8 and 9 are home (bedding, rugs, lighting, vacuums, air purifiers, smart home) and garden
+(raised beds, hoses, sheds, patio, pool); they use the existing "Home & Kitchen" and "Patio, Lawn & Garden" categories so there are no duplicate categories. Keys 18, 19 and 20 are the new categories Automotive, Pets and
+Health & Beauty (`CATS` 18 to 20 in `amazon_merge.py`). `amazon_scan.js` now also reads the deals list departments Automotive, Pet Supplies, Beauty & Personal Care and Health & Personal Care (each well under the 500 cap on 2026-11-24:
+23, 19, 57 and 36). Because a search such as "dog fence" returns security cameras, the merge removes Automotive, Pets or Health & Beauty from a search-only item whose title does not look like that category when the item has another
+category (`REL_RE`); perfume that turns up in the clothing department or clothing searches is filed under Health & Beauty. To run only these groups set `window.__AW_ONLY_EXTRA7 = true` (about 20 min). The full search run is now
+about 2030 pages (about 90 min). Pasting a trimmed script with only the new groups is fine when merging with earlier same-day runs (the merge ignores the scan's own brand field).
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).
