@@ -12,7 +12,10 @@
       return `<a href="${esc(base + x.path)}"${here === x.id ? ' aria-current="page"' : ''}>${inner}</a>`;
     }).join('');
     const search = `<a href="${base}search/"${here === 'search' ? ' aria-current="page"' : ''}>Search all</a>`;
-    menu.innerHTML = home + items + search;
+    // Private, password-protected page (see flip/ and tools/lock_page.py).
+    const lock = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:6px;flex:none"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+    const flip = `<a href="${base}flip/"${here === 'flip' ? ' aria-current="page"' : ''}>${lock}Marketplace</a>`;
+    menu.innerHTML = home + items + search + flip;
   }).catch(() => {});
 })();
 
