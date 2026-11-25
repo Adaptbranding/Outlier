@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=7">
+<link rel="stylesheet" href="../assets/site.css?v=8">
 </head>
 <body>
 <header class="site">
@@ -17,7 +17,7 @@
     <nav class="menu" id="menu" aria-label="Stores"></nav>
   </div>
 </header>
-<script src="../assets/nav.js?v=4" data-base="../" data-here="canadian-tire" defer></script>
+<script src="../assets/nav.js?v=5" data-base="../" data-here="canadian-tire" defer></script>
 
 <header class="wrap hero">
   <h1>Canadian Tire outliers</h1>
@@ -99,6 +99,7 @@
   <ul class="stores" id="dlist"></ul>
 </dialog>
 
+<script src="../assets/saved.js?v=1"></script>
 <script src="../assets/pricefilter.js?v=2"></script>
 <script>
 (function () {
@@ -225,6 +226,7 @@
     const more = vis.length > 1 ? `<button type="button" class="btn ghost" data-stores="${idx}">All ${vis.length} stores</button>` : '';
     return `<article class="card">${media}
       <div class="body">
+        ${Saved.btn({ s: 'canadian-tire', c: it.code, t: it.title, i: it.img, u: url, b: it.brand, p: best.sale, o: best.orig, m: it.multi })}
         <p class="brand">${esc(it.brand)}</p>
         <h2><a href="${esc(url)}" target="_blank" rel="noopener">${esc(it.title)}</a></h2>
         <p class="price"><strong>${it.multi ? '<small>from </small>' : ''}${fmt(best.sale)}</strong><s>${fmt(best.orig)}</s></p>

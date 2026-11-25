@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saved deals | Outlier</title>
+<meta name="description" content="The products you saved on Outlier, with their prices checked against the latest scan.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=8">
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand-link" href="../"><i aria-hidden="true"></i>Outlier</a>
+    <nav class="menu" id="menu" aria-label="Stores"></nav>
+  </div>
+</header>
+<script src="../assets/nav.js?v=5" data-base="../" data-here="saved" defer></script>
+
+<header class="wrap hero">
+  <h1>Saved</h1>
+  <p>Products you saved with the heart button. Each one is checked against the latest scan, so you can see whether the price moved or the deal is gone. The list is kept in this browser on this device.</p>
+  <div class="stats" id="stats" aria-live="polite"></div>
+</header>
+
+<main class="wrap">
+  <div class="status">
+    <span class="saved-tools">
+      <span id="count" aria-live="polite"></span>
+      <span id="clearbox"></span>
+    </span>
+    <div class="sel labeled"><span class="tag">Sort</span><select id="sort" aria-label="Sort saved products">
+      <option value="recent">Recently saved</option>
+      <option value="low">Lowest price</option>
+      <option value="store">Store</option>
+    </select></div>
+  </div>
+  <p class="loadnote" id="undo" aria-live="polite"></p>
+  <div class="grid" id="list"></div>
+  <footer>
+    <details>
+      <summary>About saved products</summary>
+      <p>Saved products live in this browser's local storage on this device. Outlier has no accounts, so the list does not follow you to another phone or computer, and clearing your browser's site data or using a private window removes it. Each saved product keeps the photo, link and price from the moment you saved it. The "now" price comes from the latest daily scan of that store; if a product is missing from the scan it is no longer 50% off or more, or it sold out, so open the store to check. Store prices and stock can differ from what was scanned.</p>
+    </details>
+  </footer>
+</main>
+
+<script src="../assets/saved.js?v=1"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => n == null ? '' : '$' + n.toFixed(2);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const DATA = { 'canadian-tire': 'data/canadian-tire/deals.json', 'marks': 'data/marks/deals.json', 'home-hardware': 'data/home-hardware/deals.json',
+    'amazon': 'data/amazon/deals.json', 'home-depot': 'data/home-depot/deals.json', 'rona': 'data/rona/deals.json' };
+  const NAMES = {};
+  const NOW = {};        // store id -> Map(code -> { sale, orig }) from the latest scan, or null when it could not be loaded
+  let sort = 'recent', lastRemoved = null, clearing = false;
+
+  // The cheapest-by-percentage deal for a product in the latest scan, the same rule the store pages use for "best".
+  function best(row) {
+    let b = null;
+    for (const d of row[7]) {
+      const raw = d[3] ? 1 - d[1] / d[3] : 0;
+      if (!b || raw > b.raw || (raw === b.raw && d[1] < b.sale)) b = { raw, sale: d[1], orig: d[3] };
+    }
+    return b;
+  }
+
+  function status(x) {
+    const m = NOW[x.s];
+    if (m === undefined) return { kind: 'loading' };
+    if (m === null) return { kind: 'unknown' };
+    const cur = m.get(x.c);
+    if (!cur) return { kind: 'gone' };
+    return { kind: 'live', cur };
+  }
+
+  function card(x) {
+    const st = status(x), name = NAMES[x.s] || x.s;
+    const now = st.kind === 'live' ? st.cur : null;
+    const sale = now ? now.sale : x.p, orig = now ? now.orig : x.o;
+    const pct = sale != null && orig ? Math.floor((1 - sale / orig) * 100 + 0.05) : 0;
+    let chg;
+    if (st.kind === 'live' && x.p != null) {
+      const diff = Math.round((st.cur.sale - x.p) * 100) / 100;
+      chg = diff < 0 ? `<p class="chg drop"><b>Down ${fmt(-diff)}</b> since you saved it at ${fmt(x.p)}</p>`
+        : diff > 0 ? `<p class="chg up"><b>Up ${fmt(diff)}</b> since you saved it at ${fmt(x.p)}</p>`
+        : `<p class="chg">Same price as when you saved it (${fmt(x.p)})</p>`;
+    } else if (st.kind === 'gone') {
+      chg = `<p class="chg gone">Not in the latest scan, so it may no longer be 50% off or may have sold out. Saved at ${fmt(x.p)}. Check the store.</p>`;
+    } else if (st.kind === 'unknown') {
+      chg = `<p class="chg gone">Could not check the current price. Saved at ${fmt(x.p)}.</p>`;
+    } else {
+      chg = `<p class="chg">Checking the latest price…</p>`;
+    }
+    const badge = pct >= 50 && st.kind !== 'gone' ? `<span class="pct">${pct}% off</span>` : '';
+    const media = x.i
+      ? `<a class="media" href="${esc(x.u)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="${esc(x.i)}" alt="" width="400" height="400" loading="lazy" decoding="async" referrerpolicy="no-referrer">${badge}</a>`
+      : `<a class="media none" href="${esc(x.u)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">${badge}</a>`;
+    return `<article class="card">${media}
+      <div class="body">
+        <p class="brand"><span class="ret">${esc(name)}</span>${x.b ? ' · ' + esc(x.b) : ''}</p>
+        <h2><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a></h2>
+        <p class="price"><strong>${x.m && st.kind !== 'live' ? '<small>from </small>' : ''}${fmt(sale)}</strong>${orig ? `<s>${fmt(orig)}</s>` : ''}</p>
+        ${chg}
+        <div class="actions"><a class="btn" href="${esc(x.u)}" target="_blank" rel="noopener">View deal</a><button type="button" class="btn ghost rm" data-rm="${esc(x.k)}" aria-label="Remove from saved: ${esc(x.t)}">Remove</button></div>
+      </div></article>`;
+  }
+
+  function sorted(list) {
+    const a = list.slice();
+    if (sort === 'low') a.sort((p, q) => (cur(p) ?? Infinity) - (cur(q) ?? Infinity));
+    else if (sort === 'store') a.sort((p, q) => (NAMES[p.s] || p.s).localeCompare(NAMES[q.s] || q.s) || q.at - p.at);
+    return a;
+  }
+  function cur(x) { const s = status(x); return s.kind === 'live' ? s.cur.sale : x.p; }
+
+  function render() {
+    const list = window.Saved.list();
+    $('count').innerHTML = `<b>${list.length.toLocaleString()}</b> saved`;
+    $('clearbox').innerHTML = !list.length ? '' : clearing
+      ? 'Remove all saved products? <button type="button" class="btn danger" id="clearyes">Yes, remove all</button> <button type="button" class="btn ghost" id="clearno">Keep them</button>'
+      : '<button type="button" class="btn ghost" id="clear">Clear all</button>';
+    const st = list.map(status);
+    const down = list.filter((x, i) => st[i].kind === 'live' && x.p != null && st[i].cur.sale < x.p - 0.005).length;
+    const gone = st.filter(s => s.kind === 'gone').length;
+    $('stats').innerHTML = list.length
+      ? `<span><b>${list.length}</b> saved</span>${down ? `<span><b>${down}</b> cheaper now</span>` : ''}${gone ? `<span><b>${gone}</b> not in the latest scan</span>` : ''}`
+      : '';
+    $('list').innerHTML = list.length ? sorted(list).map(card).join('')
+      : '<div class="empty" style="grid-column:1/-1"><b>Nothing saved yet</b>Tap the heart on any deal to keep it here. Start with <a href="../search/">Search all</a> or pick a store above.</div>';
+    $('undo').innerHTML = lastRemoved ? `Removed “${esc(lastRemoved.t)}”. <button type="button" class="btn ghost" id="undobtn" style="flex:none;padding:4px 12px">Undo</button>` : '';
+  }
+
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    const rm = t.closest && t.closest('[data-rm]');
+    if (rm) { lastRemoved = window.Saved.list().find(x => x.k === rm.dataset.rm) || null; window.Saved.remove(rm.dataset.rm); return; }
+    if (t.id === 'undobtn' && lastRemoved) { const r = lastRemoved; lastRemoved = null; window.Saved.toggle(r); return; }
+    if (t.id === 'clear') { clearing = true; render(); const y = $('clearno'); if (y) y.focus(); return; }
+    if (t.id === 'clearno') { clearing = false; render(); const c = $('clear'); if (c) c.focus(); return; }
+    if (t.id === 'clearyes') { clearing = false; lastRemoved = null; window.Saved.clear(); }
+  });
+  $('sort').addEventListener('change', (e) => { sort = e.target.value; render(); });
+  window.Saved.onChange(() => { render(); ensure(); });
+
+  // Check each store that has a saved product against its latest scan (once per store per visit).
+  const asked = new Set();
+  function ensure() {
+    const stores = [...new Set(window.Saved.list().map(x => x.s))].filter(s => DATA[s] && !asked.has(s));
+    stores.forEach(s => asked.add(s));
+    return Promise.all(stores.map(async (s) => {
+      try {
+        const r = await fetch('../' + DATA[s]); if (!r.ok) throw new Error(r.status);
+        const d = await r.json(), m = new Map();
+        for (const row of d.items) { const b = best(row); if (b) m.set(String(row[0]), { sale: b.sale, orig: b.orig }); }
+        NOW[s] = m;
+      } catch (e) { NOW[s] = null; }
+      render();
+    }));
+  }
+  async function load() {
+    try { const r = await fetch('../retailers.json'); const d = await r.json(); d.retailers.forEach(x => { NAMES[x.id] = x.name; }); } catch (e) {}
+    render();
+    ensure();
+  }
+  load();
+})();
+</script>
+</body>
+</html>

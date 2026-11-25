@@ -209,3 +209,25 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .pftrack input:focus-visible::-moz-range-thumb { outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 1px; }
 .pftrack input:active::-webkit-slider-thumb { cursor: grabbing; }
 @media (max-width: 640px) { .pfmount { flex: 1 1 100%; } .pf { width: 100%; } }
+
+/* Save button (assets/saved.js) and the Saved page */
+.body { position: relative; }
+.save { position: absolute; right: 12px; top: -22px; z-index: 2; width: 42px; height: 42px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--muted); box-shadow: 0 1px 4px rgba(0, 0, 0, .18); cursor: pointer; transition: transform .12s, color .12s, border-color .12s; }
+.save svg { fill: none; }
+.save:hover { color: var(--ink); border-color: var(--muted); }
+.save:active { transform: scale(.92); }
+.save[aria-pressed="true"] { color: #d6335a; border-color: #d6335a; }
+.save[aria-pressed="true"] svg { fill: currentColor; }
+.save:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+.navcount { margin-left: 6px; min-width: 18px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: .72rem; font-weight: 700; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.navcount[hidden] { display: none; }
+.card .brand { padding-right: 44px; }
+.chg { margin: 0; font-size: .86rem; color: var(--muted); }
+.chg b { color: var(--ink); font-weight: 600; }
+.chg.drop b { color: var(--save); }
+.chg.up b { color: #b4361f; }
+.chg.gone { font-style: italic; }
+.saved-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.saved-tools .btn { flex: none; padding: 7px 14px; }
+.btn.danger { background: #b4361f; border-color: #b4361f; color: #fff; }
+.card .rm { flex: none; }
