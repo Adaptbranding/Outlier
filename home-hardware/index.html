@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 </head>
 <body>
 <header class="site">
@@ -51,6 +51,7 @@
         <option value="10">10 or fewer</option>
         <option value="25">25 or fewer</option>
       </select></div>
+      <div class="pfmount" id="pricef"></div>
       <div class="sel labeled"><span class="tag">Discount</span><select id="minpct" aria-label="Minimum discount">
         <option value="50" selected>50% or more</option>
         <option value="60">60% or more</option>
@@ -98,6 +99,7 @@
   <ul class="stores" id="dlist"></ul>
 </dialog>
 
+<script src="../assets/pricefilter.js?v=1"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -157,7 +159,7 @@
   }
   const emptyHint = () => state.when
     ? (ITEMS.some(i => i.first) ? 'Nothing new matches these filters. Try a longer window or loosen the other filters.' : 'New-deal tracking starts with the next daily update, so nothing is marked new yet. Check back tomorrow.')
-    : 'Try a wider distance, a lower discount, or "Any" stores.';
+    : 'Try a wider distance, a lower discount, a wider price range, or "Any" stores.';
 
   function compute() {
     const since = sinceDate(state.when);
@@ -171,7 +173,7 @@
       if (state.maxn && it.n > state.maxn) continue;
       if (since && !(it.first && it.first >= since)) continue;
       if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
-      let vis = it.deals.filter(d => d.raw * 100 >= state.minpct - 0.05);
+      let vis = it.deals.filter(d => d.raw * 100 >= state.minpct - 0.05 && PriceFilter.test(d.sale));
       if (home) {
         if (state.radius === 0) vis = vis.filter(d => d.s === state.store);
         else if (state.radius > 0) vis = vis.filter(d => dist[d.s] <= state.radius);
@@ -272,6 +274,11 @@
     $('foot').innerHTML = `Prices, stock and photos come from homehardware.ca for all ${D.storeCount} Ontario stores, scanned ${esc(when.toLocaleString('en-CA'))}. Each price is the online sale or clearance price when that store is your selected store on homehardware.ca; online pricing is not a promise of the in-store shelf price. A deal counts only if the item is in stock at the store or can be shipped to it, and anything 50% off or more at every Ontario store is left out. Stock changes quickly. Open the product page, then pick the store shown here as your store to see the same price. Product photos load from Home Hardware's image servers and belong to Home Hardware and its brands. This is an independent tool and is not affiliated with Home Hardware.`;
   }
 
+  function initPrice() {
+    PriceFilter.mount($('pricef'), () => render(true));
+    PriceFilter.setPrices(ITEMS.flatMap(i => i.deals.map(d => d.sale)));
+  }
+
   function wire() {
     const set = (k, v) => { state[k] = v; persist(); render(true); };
     let t = null;
@@ -303,7 +310,7 @@
   }
 
   fetch('../data/home-hardware/deals.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(data => { prepare(data); storeOpts(); wire(); summary(); render(true); })
+    .then(data => { prepare(data); initPrice(); storeOpts(); wire(); summary(); render(true); })
     .catch(err => { $('stats').textContent = 'The deals could not load (' + err.message + '). Reload the page to try again.'; });
 })();
 </script>

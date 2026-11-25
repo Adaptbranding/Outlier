@@ -188,3 +188,24 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .legal { margin: 24px 0 0; padding: 26px 0 40px; border-top: 1px solid var(--line); font-size: .8rem; line-height: 1.55; color: var(--muted); }
 .legal p { margin: 0 0 10px; max-width: 90ch; }
 .legal strong { color: var(--ink); font-weight: 600; }
+
+/* Price range slider (assets/pricefilter.js) */
+.pfmount { flex: 0 1 auto; }
+.pf { --pa: 0%; --pb: 100%; position: relative; width: 230px; height: 44px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 16px; }
+.pf[hidden] { display: none; }
+.pf .tag { position: absolute; left: 14px; top: 5px; font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); pointer-events: none; }
+.pf .pfv { position: absolute; right: 14px; top: 4px; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pf.on { border-color: var(--accent); }
+.pf.on .pfv { color: var(--ink); font-weight: 600; }
+.pftrack { position: absolute; left: 16px; right: 16px; bottom: 9px; height: 20px; }
+.pftrack::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: linear-gradient(to right, var(--line) var(--pa), var(--accent) var(--pa), var(--accent) var(--pb), var(--line) var(--pb)); }
+.pftrack input { position: absolute; left: -8px; width: calc(100% + 16px); top: 0; height: 20px; margin: 0; background: none; appearance: none; -webkit-appearance: none; pointer-events: none; }
+.pftrack input::-webkit-slider-runnable-track { background: none; height: 20px; }
+.pftrack input::-moz-range-track { background: none; height: 20px; }
+.pftrack input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; pointer-events: auto; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; border: 2px solid var(--accent); background: var(--card); box-shadow: 0 1px 3px rgba(0, 0, 0, .25); cursor: grab; }
+.pftrack input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); background: var(--card); box-shadow: 0 1px 3px rgba(0, 0, 0, .25); cursor: grab; }
+.pftrack input:focus-visible { outline: none; }
+.pftrack input:focus-visible::-webkit-slider-thumb { outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 1px; }
+.pftrack input:focus-visible::-moz-range-thumb { outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 1px; }
+.pftrack input:active::-webkit-slider-thumb { cursor: grabbing; }
+@media (max-width: 640px) { .pfmount { flex: 1 1 100%; } .pf { width: 100%; } }

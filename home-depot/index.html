@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=5">
+<link rel="stylesheet" href="../assets/site.css?v=6">
 </head>
 <body>
 <header class="site">
@@ -52,6 +52,7 @@
         <option value="10">10 or fewer</option>
         <option value="25">25 or fewer</option>
       </select></div>
+      <div class="pfmount" id="pricef"></div>
       <div class="sel labeled"><span class="tag">Discount</span><select id="minpct" aria-label="Minimum discount">
         <option value="50" selected>50% or more</option>
         <option value="60">60% or more</option>
@@ -100,6 +101,7 @@
   <ul class="stores" id="dlist"></ul>
 </dialog>
 
+<script src="../assets/pricefilter.js?v=1"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -169,7 +171,7 @@
   }
   const emptyHint = () => state.when
     ? (ITEMS.some(i => i.first) ? 'Nothing new matches these filters. Try a longer window or loosen the other filters.' : 'New-deal tracking starts with the next daily update, so nothing is marked new yet. Check back tomorrow.')
-    : 'Try a wider distance, a lower discount, or "Any" stores.';
+    : 'Try a wider distance, a lower discount, a wider price range, or "Any" stores.';
 
   function compute() {
     const since = sinceDate(state.when);
@@ -187,6 +189,7 @@
       let vis = it.deals.filter(d => (d.clr ? state.minpct <= 50 : d.raw * 100 >= state.minpct - 0.05) && (!state.prov || PROV[d.s] === state.prov));
       if (state.kind === 'sale') vis = vis.filter(d => !d.clr);
       if (state.kind === 'clr') vis = vis.filter(d => d.clr);
+      vis = vis.filter(d => PriceFilter.test(d.sale));
       if (home) {
         if (state.radius === 0) vis = vis.filter(d => d.s === state.store);
         else if (state.radius > 0) vis = vis.filter(d => dist[d.s] <= state.radius);
@@ -287,6 +290,11 @@
     $('foot').innerHTML = `Prices, stock and photos come from homedepot.ca for ${D.storeCount} stores in every province, scanned ${esc(when.toLocaleString('en-CA'))}. Home Depot prices are mostly the same at every store, so what differs between stores is which ones have the item in stock; a deal counts only if the item is in stock at the store, and an item 50% off or more at every scanned store is left out. The scan looks at items on sale (Savings) at 50% or more off the regular price; clearance items get a percentage only where that store shows a regular price next to the clearance price; most clearance items show none, so they are marked Clearance with no percentage (their discount is unknown, and they are hidden when the minimum discount is above 50%). Clearance is final sale in most cases and stock is often very low. Open the product page, then pick the store shown here as your store to see the same price and stock. Product photos load from Home Depot's image servers and belong to Home Depot and its brands. This is an independent tool and is not affiliated with The Home Depot.`;
   }
 
+  function initPrice() {
+    PriceFilter.mount($('pricef'), () => render(true));
+    PriceFilter.setPrices(ITEMS.flatMap(i => i.deals.map(d => d.sale)));
+  }
+
   function wire() {
     const set = (k, v) => { state[k] = v; persist(); render(true); };
     let t = null;
@@ -322,7 +330,7 @@
   }
 
   Promise.all(['deals', 'clearance'].map(n => fetch('../data/home-depot/' + n + '.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })))
-    .then(([data, clr]) => { prepare(data, clr); storeOpts(); wire(); summary(); render(true); })
+    .then(([data, clr]) => { prepare(data, clr); initPrice(); storeOpts(); wire(); summary(); render(true); })
     .catch(err => { $('stats').textContent = 'The deals could not load (' + err.message + '). Reload the page to try again.'; });
 })();
 </script>
