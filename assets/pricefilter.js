@@ -4,20 +4,32 @@
 //   PriceFilter.addPrices(numbers)    widen the range (Search all loads one retailer at a time)
 //   PriceFilter.test(price)           true when the price is inside the chosen range
 // The scale is logarithmic because prices run from about $1 to several thousand dollars; a straight line would
-// leave nearly all the handle travel to the dearest items. Parking a handle at its end means "no limit" on that
-// side, so a new daily scan with a higher top price is never cut off by an old setting. The setting is not saved
-// between visits for the same reason.
+// leave nearly all the handle travel to the dearest items. The midpoint of the slider is $500 (each half is its own
+// logarithmic scale) whenever the page has prices on both sides of $500. Parking a handle at its end means "no limit"
+// on that side, so a new daily scan with a higher top price is never cut off by an old setting. The setting is not
+// saved between visits for the same reason.
 (function () {
   const STEPS = 1000;
+  const MID = 500, HALF = STEPS / 2;  // the halfway point of the slider is $500
   let lo = Infinity, hi = -Infinity, min = null, max = null, onChange = null, els = null;
 
+  const split = () => lo < MID && hi > MID;
   const span = () => Math.log((hi + 1) / (lo + 1));
   const nice = (v) => {
     const s = v < 10 ? 0.5 : v < 100 ? 1 : v < 1000 ? 5 : v < 5000 ? 10 : 50;
     return Math.round(v / s) * s;
   };
-  const toVal = (t) => Math.min(hi, Math.max(lo, nice((lo + 1) * Math.exp(span() * t / STEPS) - 1)));
-  const toPos = (v) => Math.round(STEPS * Math.log((v + 1) / (lo + 1)) / span());
+  const raw = (t) => {
+    if (!split()) return (lo + 1) * Math.exp(span() * t / STEPS) - 1;
+    if (t <= HALF) return (lo + 1) * Math.exp(Math.log((MID + 1) / (lo + 1)) * t / HALF) - 1;
+    return (MID + 1) * Math.exp(Math.log((hi + 1) / (MID + 1)) * (t - HALF) / (STEPS - HALF)) - 1;
+  };
+  const toVal = (t) => Math.min(hi, Math.max(lo, nice(raw(t))));
+  const toPos = (v) => {
+    if (!split()) return Math.round(STEPS * Math.log((v + 1) / (lo + 1)) / span());
+    if (v <= MID) return Math.round(HALF * Math.log((v + 1) / (lo + 1)) / Math.log((MID + 1) / (lo + 1)));
+    return Math.round(HALF + (STEPS - HALF) * Math.log((v + 1) / (MID + 1)) / Math.log((hi + 1) / (MID + 1)));
+  };
   const money = (v) => '$' + (v < 10 && v % 1 ? v.toFixed(2) : Math.round(v).toLocaleString('en-CA'));
   const ready = () => isFinite(lo) && hi > lo;
 
