@@ -182,11 +182,11 @@ about 2030 pages (about 90 min). Pasting a trimmed script with only the new grou
 Added 2026-11-24 (owner: food and candy): `EXTRA8` has two more query groups, about 160 searches. Key 21 is food (emergency and freeze-dried food, coffee, tea, nuts, snacks, pantry, gift baskets, baby formula) and key 22 is candy
 (chocolate, gummies, advent calendars, gift boxes, major candy brands); they are `CATS` 21 and 22 ("Food & Grocery", "Candy & Chocolate") in `amazon_merge.py`, and a food item whose title is clearly candy or chocolate (`CANDY_RE`) is moved to
 Candy & Chocolate in both the search and sale-list paths. `amazon_scan.js` also reads the deals list's Grocery & Gourmet Food department (6967215011). To run only these groups set `window.__AW_ONLY_EXTRA8 = true` (about 6 min).
-The full search run is now about 2350 pages (about 105 min). The $100 list-price floor still applies, so most groceries never qualify; only bulk, case, gift and emergency-food listings do.
+The full search run is now about 2350 pages (about 105 min). The $100 list-price floor still applies, so almost no groceries qualify: after the per-unit-price fix below the first full run found 1 food and 0 candy items (the earlier 43 and 10 were per-unit prices read as list prices).
 
 Fix 2026-11-24 (owner: show real sales, not price per amount): search cards show a per-unit price ("$351.00/100 ml") in the same `.a-price.a-text-price` markup as the struck-through list price, and `amazon_wide_scan.js` was reading
 the first one, so items sold by weight, volume or count could show a fake list price (24 cans of soup "listed" at $770). The list price is now read only from `.a-price.a-text-price[data-a-strike="true"]` (the "List:" or "Was:" price).
-Every search-sourced item must be re-scanned with the fixed script (a full run, split over two tabs with `window.__KEYS = [...]` it is about an hour); the sale-list items come from Amazon's deals API (`basisPrice`) and are not affected.
+Every search-sourced item must be re-scanned with the fixed script (a full run, split over two tabs with `window.__KEYS = [0,1,2,3,4,8,9,10,11,12,13]` and `[14,15,16,17,18,19,20,21,22]`, took 40 minutes on 2026-11-24; the script text can be stored once in `localStorage` and run with `(0, eval)(localStorage.__awsrc)` in each tab); the sale-list items come from Amazon's deals API (`basisPrice`) and are not affected.
 
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
