@@ -197,7 +197,7 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .pf .pfv { position: absolute; right: 14px; top: 4px; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pf.on { border-color: var(--accent); }
 .pf.on .pfv { color: var(--ink); font-weight: 600; }
-.pftrack { position: absolute; left: 16px; right: 16px; bottom: 9px; height: 20px; }
+.pftrack { position: absolute; left: 16px; right: 16px; bottom: 2px; height: 20px; }
 .pftrack::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: linear-gradient(to right, var(--line) var(--pa), var(--accent) var(--pa), var(--accent) var(--pb), var(--line) var(--pb)); }
 .pftrack input { position: absolute; left: -8px; width: calc(100% + 16px); top: 0; height: 20px; margin: 0; background: none; appearance: none; -webkit-appearance: none; pointer-events: none; }
 .pftrack input::-webkit-slider-runnable-track { background: none; height: 20px; }
