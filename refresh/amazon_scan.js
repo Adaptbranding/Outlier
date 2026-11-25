@@ -1,4 +1,4 @@
-// Amazon.ca sale-list scan: deals that are 50% off or more where the "Was/List" price is $100 or more, in Electronics, Tools & Home
+// Amazon.ca sale-list scan: deals that are 50% off or more where the "Was/List" price is $1 or more (any item; was $100), in Electronics, Tools & Home
 // Improvement, Sports & Outdoors, Home & Kitchen and Patio, Lawn & Garden and Clothing, Shoes & Accessories. Run in a signed-OUT amazon.ca tab (https://www.amazon.ca/gp/goldbox, which redirects to the current
 // promotions page). Starts a background job: window.__AMZ. Amazon has no store-level prices, so the file has one "store" (Amazon.ca).
 // Uses only the endpoint the deals page itself calls, same-origin, one request at a time with a 400 ms pause:
@@ -10,7 +10,7 @@
   const DEPTS = [['Electronics', '677211011'], ['Sports & Outdoors', '2242990011'], ['Tools & Home Improvement', '3006903011'], ['Home & Kitchen', '2206276011'], ['Patio, Lawn & Garden', '6299024011'], ['Automotive', '6948390011'], ['Pet Supplies', '6291628011'], ['Beauty & Personal Care', '6205125011'], ['Health & Personal Care', '6205178011'], ['Grocery & Gourmet Food', '6967215011'], ['Clothing, Shoes & Accessories', '21353446011'], ['Clothing, Shoes & Accessories', '21353444011'], ['Clothing, Shoes & Accessories', '21353442011'], ['Clothing, Shoes & Accessories', '21353440011'], ['Clothing, Shoes & Accessories', '21353443011'], ['Clothing, Shoes & Accessories', '21353448011'], ['Clothing, Shoes & Accessories', '21353445011'], ['Clothing, Shoes & Accessories', '23577070011']];
   // Clothing, Shoes & Accessories (21204936011) returned 500 products in one query (the cap), so it is read as its eight sub-departments (Women, Men, Girls, Boys, Baby, Luggage, Novelty, Sport), all under one category name.
   // 2026-11-24: 407, 164, 25, 29, 8, 34, 18, 80. If Women reaches 480 or more, split it by brand (filters.brandIds) before trusting it.
-  const MIN_LIST = 100, MAX_RATIO = 0.5;
+  const MIN_LIST = 1, MAX_RATIO = 0.5;
   const R = window.__AMZ = { phase: 'scan', dept: '', pages: 0, seen: 0, errs: [], finished: false, aborted: null, perDept: {} };
   const found = {};  // asin -> { p: product, depts: Set }
   const sleep = ms => new Promise(res => setTimeout(res, ms));
@@ -48,7 +48,7 @@
       if (total >= 480) R.errs.push({ dept: name + ' ' + id, status: 'near cap ' + total });
       await sleep(400);
     }
-    // ---- Export: keep deals whose list price is $100 or more and whose price is half of it or less.
+    // ---- Export: keep deals whose list price is $1 or more and whose price is half of it or less.
     const cats = [...new Set(DEPTS.map(d => d[0]))];
     const items = [];
     for (const asin in found) {

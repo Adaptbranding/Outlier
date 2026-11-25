@@ -188,6 +188,11 @@ Fix 2026-11-24 (owner: show real sales, not price per amount): search cards show
 the first one, so items sold by weight, volume or count could show a fake list price (24 cans of soup "listed" at $770). The list price is now read only from `.a-price.a-text-price[data-a-strike="true"]` (the "List:" or "Was:" price).
 Every search-sourced item must be re-scanned with the fixed script (a full run, split over two tabs with `window.__KEYS = [0,1,2,3,4,8,9,10,11,12,13]` and `[14,15,16,17,18,19,20,21,22]`, took 40 minutes on 2026-11-24; the script text can be stored once in `localStorage` and run with `(0, eval)(localStorage.__awsrc)` in each tab); the sale-list items come from Amazon's deals API (`basisPrice`) and are not affected.
 
+Scan resilience (2026-11-24): `amazon_wide_scan.js` checkpoints to `localStorage` (`__awck_<keys>`) after every page and saves the final list as `__awck_<keys>_final`. Chrome sometimes drops the extension's tab group mid-scan (about 25 min in); open a fresh amazon.ca tab, set `window.__KEYS` to the same keys and run the stored script again: it resumes from the checkpoint. Delete the `__awck_*` keys when a run is finished so the next run starts clean. With the $1 floor a full run is ~1,160 + ~1,190 pages (~40 min on two tabs) and yields ~1,500 items.
+
+Floor lowered 2026-11-24 (owner: "make the floor start at 1 dollar for all categories"): the $100 list-price minimum is gone. `MIN_LIST` is 1 in `amazon_scan.js` and `amazon_wide_scan.js`, so any item that is 50% off or more
+of its list price qualifies (the 80% sanity cap in `amazon_merge.py` and the stricter 65% cap for Food and Candy still apply). The page copy no longer says "$100 or more".
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).

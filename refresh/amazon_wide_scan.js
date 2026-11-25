@@ -1,4 +1,4 @@
-// Amazon.ca wide scan: items anywhere on Amazon.ca (not only its deals list) that are 50% off or more of a list price of $100 or more,
+// Amazon.ca wide scan: items anywhere on Amazon.ca (not only its deals list) that are 50% off or more of their list price ($1 or more, so any item),
 // counting coupons, for name brands in furniture, outdoor & recreation, camping, hunting and farm equipment.
 // Run in a signed-OUT amazon.ca tab (any amazon.ca page), after pasting refresh/keepalive.js in the same tab. Starts a background job: window.__AW.
 // Amazon search has no "% off" filter, so this reads ordinary search result pages (the same pages a shopper's search opens), one at a time
@@ -47,9 +47,16 @@
   if (window.__AW_ONLY_EXTRA5) { for (const k in Q) if (!(k in EXTRA5)) delete Q[k]; }
   if (window.__AW_ONLY_EXTRA4) { for (const k in Q) if (!(k in EXTRA4)) delete Q[k]; }
   if (window.__AW_ONLY_EXTRA) { for (const k in Q) delete Q[k]; Q[3] = EXTRA3; } else { Q[3] = Q[3].concat(EXTRA3); }
-  const PAGES = 2, PAUSE = 800;
+  const PAGES = 2, PAUSE = 800, MIN_LIST = 1;  // owner 2026-11-24: any list price (was $100)
   const R = window.__AW = { phase: 'scan', q: '', done: 0, total: 0, cards: 0, errs: [], finished: false, aborted: null, hits: 0 };
-  const found = {};  // asin -> { c: card, cats: Set }
+  // Progress is checkpointed to localStorage (key '__awck_<keys>') after every page, so a dropped tab or a
+  // restarted browser session loses nothing: re-run the same keys and the scan resumes where it stopped.
+  // The final list is also saved as '__awck_<keys>_final'.
+  const TAG = '__awck_' + (window.__KEYS || []).join('-');
+  let ck = null; try { ck = JSON.parse(localStorage.getItem(TAG)); } catch (e) {}
+  const found = {};  // asin -> { c: card, cats: Set } (only cards that are 50% off or more of the list price)
+  let skip = 0;
+  if (ck) { skip = ck.n; for (const a in ck.f) found[a] = { c: ck.f[a].c, cats: new Set(ck.f[a].cats) }; }
   const sleep = ms => new Promise(res => setTimeout(res, ms));
   const num = e => e ? parseFloat(e.textContent.replace(/[^0-9.]/g, '')) : NaN;
   const queue = [];
@@ -69,7 +76,7 @@
       const asin = c.getAttribute('data-asin'); if (!asin) return;
       const cur = num(c.querySelector('.a-price:not(.a-text-price) .a-offscreen'));
       const was = num(c.querySelector('.a-price.a-text-price[data-a-strike="true"] .a-offscreen'));  // only the struck-through List/Was price; the per-unit price ("$3.51/100 ml") is also an .a-text-price
-      if (!(was >= 100 && cur > 0)) return;  // only cards that can qualify are kept
+      if (!(was >= MIN_LIST && cur > 0)) return;  // only cards that can qualify are kept
       const h = c.querySelector('h2'), a = c.querySelector('h2 a') || c.querySelector('a.a-link-normal.s-link-style');
       const cp = c.querySelector('.s-coupon-unclipped, [class*=couponBadge], span[class*=coupon]');
       const cpt = cp ? cp.textContent.replace(/\s+/g, ' ').trim() : '';
@@ -86,7 +93,9 @@
   };
   (async () => {
     let bad = 0;
+    let qi = 0;
     for (const [q, ci] of queue) {
+      if (qi++ < skip) { R.done += PAGES; continue; }
       R.q = q;
       for (let pg = 1; pg <= PAGES && !R.aborted; pg++) {
         let r;
@@ -97,13 +106,14 @@
         const cards = parse(await r.text());
         if (cards === null) { R.aborted = 'captcha'; break; }
         bad = 0; R.done++;
-        for (const c of cards) { const f = found[c.asin] || (found[c.asin] = { c, cats: new Set() }); f.cats.add(ci); }
+        for (const c of cards) { if (!(c.eff > 0 && c.eff <= c.was * 0.5 + 0.005)) continue; const f = found[c.asin] || (found[c.asin] = { c, cats: new Set() }); f.cats.add(ci); }
         R.cards = Object.keys(found).length;
+        try { const f2 = {}; for (const a in found) f2[a] = { c: found[a].c, cats: [...found[a].cats] }; localStorage.setItem(TAG, JSON.stringify({ n: qi - 1, f: f2 })); } catch (e) {}
         await sleep(PAUSE);
       }
       if (R.aborted) break;
     }
-    // Export: 50% off or more of a list price of $100 or more (coupon counted), name brands only.
+    // Export: 50% off or more of the list price (coupon counted).
     const items = [];
     const lower = s => s.toLowerCase();
     const norm = s => ' ' + lower(s).replace(/[^a-z0-9+&' ]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
@@ -119,6 +129,7 @@
       items.push({ asin, t: c.t, path, brand, cur: c.cur, was: c.was, eff: c.eff, note: c.note, img: c.img, cats: [...cats].sort() });
     }
     window.__awItems = items;
+    try { localStorage.setItem(TAG + '_final', JSON.stringify(items)); } catch (e) {}
     R.hits = items.length; R.found = Object.keys(found).length; R.finished = true; R.phase = 'done';
   })().catch(e => { R.errs.push({ what: 'exception', status: String(e && e.message).slice(0, 80) }); R.aborted = R.aborted || 'exception'; R.finished = true; R.phase = 'done'; });
 }
