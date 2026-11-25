@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=8">
+<link rel="stylesheet" href="../assets/site.css?v=9">
 </head>
 <body>
 <header class="site">
@@ -38,6 +38,7 @@
       <option value="store">Store</option>
     </select></div>
   </div>
+  <section class="calc" id="calc" aria-labelledby="calch" hidden></section>
   <p class="loadnote" id="undo" aria-live="polite"></p>
   <div class="grid" id="list"></div>
   <footer>
@@ -119,8 +120,45 @@
   }
   function cur(x) { const s = status(x); return s.kind === 'live' ? s.cur.sale : x.p; }
 
+  const TAX = 0.13;      // Ontario HST
+  const cents = (n) => Math.round(n * 100);
+  const money = (c) => '$' + (c / 100).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Totals use the current scan price when it is known, the price you saved it at when the store could not be checked,
+  // and leave out products that dropped out of the latest scan (they may no longer be at that price or in stock).
+  function calc(list) {
+    let sub = 0, n = 0, skipped = 0, rows = [];
+    for (const x of list) {
+      const st = status(x);
+      if (st.kind === 'gone' || x.p == null && st.kind !== 'live') { skipped++; continue; }
+      const c = cents(st.kind === 'live' ? st.cur.sale : x.p);
+      sub += c; n++;
+      rows.push({ x, c, saved: st.kind !== 'live' });
+    }
+    const tax = Math.round(sub * TAX);
+    return { sub, tax, total: sub + tax, n, skipped, rows };
+  }
+
+  function renderCalc(list) {
+    const el = $('calc');
+    if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
+    const c = calc(list), open = el.querySelector('details') && el.querySelector('details').open;
+    const unchecked = list.filter(x => status(x).kind === 'unknown').length;
+    const loading = list.some(x => status(x).kind === 'loading');
+    el.hidden = false;
+    el.innerHTML = `<h2 id="calch">Calculator</h2>
+      <dl class="calcrows">
+        <div><dt>Subtotal <span>${c.n} ${c.n === 1 ? 'product' : 'products'}</span></dt><dd>${money(c.sub)}</dd></div>
+        <div><dt>HST <span>13%</span></dt><dd>${money(c.tax)}</dd></div>
+        <div class="tot"><dt>Total</dt><dd>${money(c.total)}</dd></div>
+      </dl>
+      <p class="calcnote">Adds up the current price of each saved product, then adds 13% Ontario HST. ${c.skipped ? `<b>${c.skipped} not counted</b> because ${c.skipped === 1 ? 'it is' : 'they are'} missing from the latest scan. ` : ''}${unchecked ? 'Some stores could not be checked, so those use the price you saved. ' : ''}${loading ? 'Still checking the latest prices. ' : ''}Shipping, deposits and in-store price differences are not included.</p>
+      ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${money(r.c)}</b></li>`).join('')}</ul></details>` : ''}`;
+  }
+
   function render() {
     const list = window.Saved.list();
+    renderCalc(list);
     $('count').innerHTML = `<b>${list.length.toLocaleString()}</b> saved`;
     $('clearbox').innerHTML = !list.length ? '' : clearing
       ? 'Remove all saved products? <button type="button" class="btn danger" id="clearyes">Yes, remove all</button> <button type="button" class="btn ghost" id="clearno">Keep them</button>'

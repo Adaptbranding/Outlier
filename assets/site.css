@@ -231,3 +231,24 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .saved-tools .btn { flex: none; padding: 7px 14px; }
 .btn.danger { background: #b4361f; border-color: #b4361f; color: #fff; }
 .card .rm { flex: none; }
+
+/* Favorites calculator (saved/index.html) */
+.calc { margin: 0 0 18px; padding: 18px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.calc h2 { margin: 0 0 10px; font-size: 1.05rem; }
+.calcrows { margin: 0; display: grid; gap: 6px; max-width: 420px; }
+.calcrows > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.calcrows dt { color: var(--muted); }
+.calcrows dt span { font-size: .84rem; margin-left: 4px; }
+.calcrows dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.calcrows .tot { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+.calcrows .tot dt { color: var(--ink); font-weight: 600; }
+.calcrows .tot dd { font-size: 1.4rem; }
+.calcnote { margin: 12px 0 0; font-size: .84rem; color: var(--muted); max-width: 70ch; text-wrap: pretty; }
+.calcnote b { color: var(--ink); font-weight: 600; }
+.calc details { margin-top: 12px; font-size: .9rem; }
+.calc summary { cursor: pointer; font-weight: 600; }
+.calcitems { list-style: none; margin: 10px 0 0; padding: 0; max-width: 560px; display: grid; gap: 4px; }
+.calcitems li { display: flex; justify-content: space-between; gap: 16px; }
+.calcitems li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.calcitems li b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.calc[hidden] { display: none; }
