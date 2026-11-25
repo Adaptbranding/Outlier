@@ -184,6 +184,10 @@ Added 2026-11-24 (owner: food and candy): `EXTRA8` has two more query groups, ab
 Candy & Chocolate in both the search and sale-list paths. `amazon_scan.js` also reads the deals list's Grocery & Gourmet Food department (6967215011). To run only these groups set `window.__AW_ONLY_EXTRA8 = true` (about 6 min).
 The full search run is now about 2350 pages (about 105 min). The $100 list-price floor still applies, so most groceries never qualify; only bulk, case, gift and emergency-food listings do.
 
+Fix 2026-11-24 (owner: show real sales, not price per amount): search cards show a per-unit price ("$351.00/100 ml") in the same `.a-price.a-text-price` markup as the struck-through list price, and `amazon_wide_scan.js` was reading
+the first one, so items sold by weight, volume or count could show a fake list price (24 cans of soup "listed" at $770). The list price is now read only from `.a-price.a-text-price[data-a-strike="true"]` (the "List:" or "Was:" price).
+Every search-sourced item must be re-scanned with the fixed script (a full run, split over two tabs with `window.__KEYS = [...]` it is about an hour); the sale-list items come from Amazon's deals API (`basisPrice`) and are not affected.
+
 Any brand (owner, 2026-11-21: "any deals 50% off or higher"): set `window.__AW_ANY = true` before pasting `amazon_wide_scan.js` (the 522-page run, about 25 min) and
 merge with `python3 -I refresh/amazon_merge.py --any ...`. Unbranded items get a blank brand; the page's Brands filter ("All brands" / "Name brands only")
 separates them. Unbranded list prices are the least reliable (many "Smart Watch" style listings show a made-up list price just under the 80% cap).

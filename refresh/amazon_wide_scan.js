@@ -68,7 +68,7 @@
     d.querySelectorAll('[data-component-type="s-search-result"]').forEach(c => {
       const asin = c.getAttribute('data-asin'); if (!asin) return;
       const cur = num(c.querySelector('.a-price:not(.a-text-price) .a-offscreen'));
-      const was = num(c.querySelector('.a-price.a-text-price .a-offscreen'));
+      const was = num(c.querySelector('.a-price.a-text-price[data-a-strike="true"] .a-offscreen'));  // only the struck-through List/Was price; the per-unit price ("$3.51/100 ml") is also an .a-text-price
       if (!(was >= 100 && cur > 0)) return;  // only cards that can qualify are kept
       const h = c.querySelector('h2'), a = c.querySelector('h2 a') || c.querySelector('a.a-link-normal.s-link-style');
       const cp = c.querySelector('.s-coupon-unclipped, [class*=couponBadge], span[class*=coupon]');
