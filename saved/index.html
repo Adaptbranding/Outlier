@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=9">
+<link rel="stylesheet" href="../assets/site.css?v=10">
 </head>
 <body>
 <header class="site">
@@ -60,6 +60,18 @@
   const NAMES = {};
   const NOW = {};        // store id -> Map(code -> { sale, orig }) from the latest scan, or null when it could not be loaded
   let sort = 'recent', lastRemoved = null, clearing = false;
+  // Products the person unticked for the calculator (default is everything counted). Kept per browser, like the saved list.
+  const SEL_KEY = 'outlier.saved.off.v1';
+  let off = new Set();
+  try { const v = JSON.parse(localStorage.getItem(SEL_KEY) || '[]'); if (Array.isArray(v)) off = new Set(v.filter(k => typeof k === 'string')); } catch (e) {}
+  function saveOff() {
+    try {
+      const keep = new Set(window.Saved.list().map(x => x.k));
+      off = new Set([...off].filter(k => keep.has(k)));
+      if (off.size) localStorage.setItem(SEL_KEY, JSON.stringify([...off])); else localStorage.removeItem(SEL_KEY);
+    } catch (e) {}
+  }
+  const isGone = (x) => { const st = status(x); return st.kind === 'gone' || (x.p == null && st.kind !== 'live'); };
 
   // The cheapest-by-percentage deal for a product in the latest scan, the same rule the store pages use for "best".
   function best(row) {
@@ -108,6 +120,8 @@
         <h2><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a></h2>
         <p class="price"><strong>${x.m && st.kind !== 'live' ? '<small>from </small>' : ''}${fmt(sale)}</strong>${orig ? `<s>${fmt(orig)}</s>` : ''}</p>
         ${chg}
+        ${isGone(x) ? '<p class="inc off">Not counted in the calculator</p>'
+          : `<label class="inc"><input type="checkbox" data-inc="${esc(x.k)}"${off.has(x.k) ? '' : ' checked'}> <span>Count in calculator</span></label>`}
         <div class="actions"><a class="btn" href="${esc(x.u)}" target="_blank" rel="noopener">View deal</a><button type="button" class="btn ghost rm" data-rm="${esc(x.k)}" aria-label="Remove from saved: ${esc(x.t)}">Remove</button></div>
       </div></article>`;
   }
@@ -127,16 +141,18 @@
   // Totals use the current scan price when it is known, the price you saved it at when the store could not be checked,
   // and leave out products that dropped out of the latest scan (they may no longer be at that price or in stock).
   function calc(list) {
-    let sub = 0, n = 0, skipped = 0, rows = [];
+    let sub = 0, n = 0, skipped = 0, rows = [], pickable = 0;
     for (const x of list) {
       const st = status(x);
-      if (st.kind === 'gone' || x.p == null && st.kind !== 'live') { skipped++; continue; }
+      if (isGone(x)) { skipped++; continue; }
+      pickable++;
+      if (off.has(x.k)) continue;
       const c = cents(st.kind === 'live' ? st.cur.sale : x.p);
       sub += c; n++;
       rows.push({ x, c, saved: st.kind !== 'live' });
     }
     const tax = Math.round(sub * TAX);
-    return { sub, tax, total: sub + tax, n, skipped, rows };
+    return { sub, tax, total: sub + tax, n, skipped, rows, pickable };
   }
 
   function renderCalc(list) {
@@ -146,13 +162,16 @@
     const unchecked = list.filter(x => status(x).kind === 'unknown').length;
     const loading = list.some(x => status(x).kind === 'loading');
     el.hidden = false;
-    el.innerHTML = `<h2 id="calch">Calculator</h2>
+    el.innerHTML = `<div class="calchead"><h2 id="calch">Calculator</h2>
+        <span class="calcpick"><span class="calcsel">${c.n} of ${c.pickable} selected</span>
+          <button type="button" class="btn ghost" id="selall"${c.n === c.pickable ? ' disabled' : ''}>Select all</button>
+          <button type="button" class="btn ghost" id="selnone"${c.n === 0 ? ' disabled' : ''}>Deselect all</button></span></div>
       <dl class="calcrows">
         <div><dt>Subtotal <span>${c.n} ${c.n === 1 ? 'product' : 'products'}</span></dt><dd>${money(c.sub)}</dd></div>
         <div><dt>HST <span>13%</span></dt><dd>${money(c.tax)}</dd></div>
         <div class="tot"><dt>Total</dt><dd>${money(c.total)}</dd></div>
       </dl>
-      <p class="calcnote">Adds up the current price of each saved product, then adds 13% Ontario HST. ${c.skipped ? `<b>${c.skipped} not counted</b> because ${c.skipped === 1 ? 'it is' : 'they are'} missing from the latest scan. ` : ''}${unchecked ? 'Some stores could not be checked, so those use the price you saved. ' : ''}${loading ? 'Still checking the latest prices. ' : ''}Shipping, deposits and in-store price differences are not included.</p>
+      <p class="calcnote">Adds up the current price of each ticked product, then adds 13% Ontario HST. Tick or untick products below to change the total. ${c.skipped ? `<b>${c.skipped} not counted</b> because ${c.skipped === 1 ? 'it is' : 'they are'} missing from the latest scan. ` : ''}${unchecked ? 'Some stores could not be checked, so those use the price you saved. ' : ''}${loading ? 'Still checking the latest prices. ' : ''}Shipping, deposits and in-store price differences are not included.</p>
       ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${money(r.c)}</b></li>`).join('')}</ul></details>` : ''}`;
   }
 
@@ -181,7 +200,21 @@
     if (t.id === 'undobtn' && lastRemoved) { const r = lastRemoved; lastRemoved = null; window.Saved.toggle(r); return; }
     if (t.id === 'clear') { clearing = true; render(); const y = $('clearno'); if (y) y.focus(); return; }
     if (t.id === 'clearno') { clearing = false; render(); const c = $('clear'); if (c) c.focus(); return; }
+    if (t.id === 'selall' || t.id === 'selnone') {
+      const all = t.id === 'selall';
+      window.Saved.list().forEach(x => { if (isGone(x)) return; if (all) off.delete(x.k); else off.add(x.k); });
+      document.querySelectorAll('[data-inc]').forEach(b => { b.checked = all; });
+      saveOff(); renderCalc(window.Saved.list());
+      const nb = $(t.id); if (nb && !nb.disabled) nb.focus(); else { const o = $(all ? 'selnone' : 'selall'); if (o) o.focus(); }
+      return;
+    }
     if (t.id === 'clearyes') { clearing = false; lastRemoved = null; window.Saved.clear(); }
+  });
+  document.addEventListener('change', (e) => {
+    const b = e.target;
+    if (!b.matches || !b.matches('[data-inc]')) return;
+    if (b.checked) off.delete(b.dataset.inc); else off.add(b.dataset.inc);
+    saveOff(); renderCalc(window.Saved.list());
   });
   $('sort').addEventListener('change', (e) => { sort = e.target.value; render(); });
   window.Saved.onChange(() => { render(); ensure(); });

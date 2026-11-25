@@ -252,3 +252,11 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .calcitems li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
 .calcitems li b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .calc[hidden] { display: none; }
+.calchead { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; flex-wrap: wrap; margin-bottom: 10px; }
+.calchead h2 { margin: 0; }
+.calcpick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); }
+.calcpick .btn { flex: none; padding: 6px 12px; font-size: .84rem; }
+.calcpick .btn:disabled { opacity: .45; cursor: default; }
+.inc { margin: 0; display: flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; }
+.inc input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.inc.off { color: var(--muted); font-style: italic; cursor: default; }
