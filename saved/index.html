@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=12">
+<link rel="stylesheet" href="../assets/site.css?v=14">
 </head>
 <body>
 <header class="site">
@@ -161,7 +161,8 @@
       rows.push({ x, c, oc, saved: st.kind !== 'live' });
     }
     const tax = Math.round(sub * TAX);
-    return { sub, tax, total: sub + tax, base, save: base - sub, n, skipped, noList, rows, pickable };
+    const baseTax = Math.round(base * TAX);
+    return { sub, tax, total: sub + tax, base, baseTax, baseTotal: base + baseTax, saveTotal: base + baseTax - (sub + tax), save: base - sub, n, skipped, noList, rows, pickable };
   }
 
   function renderCalc(list) {
@@ -195,11 +196,12 @@
         <span class="calcpick"><span class="calcsel">${c.n} of ${c.pickable} selected</span></span></div>
       <dl class="calcrows">
         <div><dt>Base prices <span>${c.n} ${c.n === 1 ? 'product' : 'products'}</span></dt><dd>${money(c.base)}</dd></div>
-        <div><dt>Sale prices</dt><dd>${money(c.sub)}</dd></div>
-        <div class="tot sav"><dt>You save${c.save > 0 ? ` <span>${pct}% off</span>` : ''}</dt><dd>${money(c.save)}</dd></div>
+        <div><dt>HST <span>13%</span></dt><dd>${money(c.baseTax)}</dd></div>
+        <div class="tot"><dt>Base total</dt><dd>${money(c.baseTotal)}</dd></div>
       </dl>
-      <p class="calcnote">Base price is the regular price crossed out on each product, before tax. It uses the same ticked products as the calculator. ${c.noList ? `<b>${c.noList} ${c.noList === 1 ? 'product has' : 'products have'} no regular price listed</b>, so ${c.noList === 1 ? 'it adds' : 'they add'} nothing to the savings. ` : ''}${loading ? 'Still checking the latest prices. ' : ''}Regular prices are set by each store and may not have been what people actually paid.</p>
-      ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${r.oc > r.c ? `<s>${money(r.oc)}</s> ` : ''}${money(r.c)}${r.oc > r.c ? ` <em>save ${money(r.oc - r.c)}</em>` : ''}</b></li>`).join('')}</ul></details>` : ''}`;
+      <div class="savebox"><span class="savelabel">Amount saved <span>with HST</span></span><b class="saveamt">${money(c.saveTotal)}</b>${c.save > 0 ? `<span class="savepct">${money(c.save)} before tax · ${pct}% off</span>` : ''}</div>
+      <p class="calcnote">Base price is the regular price crossed out on each product. HST of 13% is added to the base prices the same way the calculator adds it to the sale prices, so the amount saved includes the tax you avoid paying. It uses the same ticked products as the calculator. ${c.noList ? `<b>${c.noList} ${c.noList === 1 ? 'product has' : 'products have'} no regular price listed</b>, so ${c.noList === 1 ? 'it adds' : 'they add'} nothing to the savings. ` : ''}${loading ? 'Still checking the latest prices. ' : ''}Regular prices are set by each store and may not have been what people actually paid.</p>
+      ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems sv">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${money(r.oc)}</b><em>${r.oc > r.c ? `save ${money(r.oc - r.c)}` : '—'}</em></li>`).join('')}</ul></details>` : ''}`;
   }
 
   function renderCalcs(list) { renderCalc(list); renderSavings(list); }
