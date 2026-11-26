@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Search every store | Outlier</title>
-<meta name="description" content="One search across Canadian Tire, Home Hardware, RONA, Mark's, Home Depot and Amazon.ca: products at 50% off or more, with the newest deals first.">
+<meta name="description" content="One search across Canadian Tire, Home Hardware, RONA, Mark's, Home Depot, Amazon.ca and Bass Pro Shops: products at 50% off or more, with the newest deals first.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 
 <header class="wrap hero">
   <h1>Search every store</h1>
-  <p>One search across all the stores here. Find a product, brand or SKU at Canadian Tire, Home Hardware, RONA, Mark's, Home Depot and Amazon.ca, or switch on "New" to see what appeared in the latest update.</p>
+  <p>One search across all the stores here. Find a product, brand or SKU at Canadian Tire, Home Hardware, RONA, Mark's, Home Depot, Amazon.ca and Bass Pro Shops, or switch on "New" to see what appeared in the latest update.</p>
   <div class="stats" id="stats" aria-live="polite">Loading deals…</div>
 </header>
 
@@ -120,6 +120,9 @@
     'amazon': { data: 'data/amazon/deals.json', site: 'https://www.amazon.ca', pad: false, kind: 'am', online: true,
       stock: () => 'ships to Ontario',
       img: (v) => { const m = typeof v === 'string' && v.match(/^https:\/\/m\.media-amazon\.com\/images\/I\/([A-Za-z0-9%+_\-]+)\.(jpg|png)$/); return m ? 'https://m.media-amazon.com/images/I/' + m[1] + '._AC_UL400_.' + m[2] : ''; } },
+    'bass-pro': { data: 'data/bass-pro/deals.json', site: 'https://www.basspro.ca', pad: false, kind: 'am', online: true,
+      stock: () => 'online price',
+      img: (v) => typeof v === 'string' && /^ProductImages\/[A-Za-z0-9\/_.\-]+$/.test(v) ? 'https://assets.basspro.com/image/upload/f_auto/c_scale,w_400/v1/' + v : '' },
     'home-depot': { data: 'data/home-depot/deals.json', site: 'https://www.homedepot.ca', pad: false, kind: 'hw',
       stock: (d) => d.q > 0 ? d.q + ' in store' : 'stock not checked',
       img: (v) => /^https:\/\/images\.homedepot\.ca\/productimages\/p_[A-Za-z0-9\-]+\.jpg(\?product-images=[a-z]+)?$/.test(v) ? v : '' },
@@ -179,7 +182,7 @@
       counts[r.id] = 0;
       const since = sinceDate(r, state.when);
       for (const it of r.items || []) {
-        if (state.maxn && (r.cfg.online || it.n > state.maxn)) continue;  // online-only Amazon has no store count
+        if (state.maxn && (r.cfg.online || it.n > state.maxn)) continue;  // online-only Amazon.ca and Bass Pro have no store count
         if (since && !(it.first && it.first >= since)) continue;
         if (terms.length && !terms.every(t => it.hay.includes(t))) continue;
         const vis = it.deals.filter(d => d.raw * 100 >= state.minpct - 0.05 && PriceFilter.test(d.sale));
@@ -270,7 +273,7 @@
     $('stats').innerHTML = `<span><b>${total.toLocaleString()}</b> deals</span>${tracked ? `<span><b>${fresh.toLocaleString()}</b> new in latest update</span>` : ''}<span><b>${ok.length}</b> of ${RET.length} stores loaded</span>`;
     const fmtDay = (r) => { const d = new Date(r.D.generated); return isNaN(d) ? '' : d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }); };
     $('foot').innerHTML = 'This page combines the daily scans of ' + ok.map(r => `<a href="../${esc(r.path)}">${esc(r.name)}</a> (updated ${esc(fmtDay(r))})`).join(', ') +
-      '. Each store page explains how its prices and stock are read. Store deals are Ontario items 50% off or more at some stores but not all; Amazon.ca deals are 50% off or more on items of any list price in electronics, tools, furniture, sports, outdoors, camping, hunting, large and kitchen appliances, sinks and cabinets, outdoor power equipment, snow removal, tools, clothing, shoes and boots, automotive, home, garden, pets, health and beauty, food, candy. Stock changes quickly, so call the store before you drive. "New" means the deal was not in the previous daily update. Product photos load from each retailer\'s image servers and belong to that retailer and its brands. This is an independent tool and is not affiliated with any retailer.';
+      '. Each store page explains how its prices and stock are read. Store deals are Ontario items 50% off or more at some stores but not all; Amazon.ca deals are 50% off or more on items of any list price in electronics, tools, furniture, sports, outdoors, camping, hunting, large and kitchen appliances, sinks and cabinets, outdoor power equipment, snow removal, tools, clothing, shoes and boots, automotive, home, garden, pets, health and beauty, food, candy. Bass Pro Shops deals are the 50%-off-or-more products in the Sale list on basspro.ca (online prices, not checked store by store). Stock changes quickly, so call the store before you drive. "New" means the deal was not in the previous daily update. Product photos load from each retailer\'s image servers and belong to that retailer and its brands. This is an independent tool and is not affiliated with any retailer.';
   }
 
   function openStores(i) {

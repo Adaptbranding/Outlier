@@ -215,3 +215,16 @@ Limits: items on sale only at stores other than the base store are not seen. Reg
 ## New-deal tracking
 
 `build_data.py` keeps each item's first-seen date (row index 9, `YYYY-MM-DD`) by reading the file it is about to overwrite, so always build straight into `data/<retailer>/deals.json` (never a temp path, or every item loses its date and nothing shows as new). Items missing from the previous file get today's date; items from before tracking stay unknown (empty) until the next day. The site's "Show" filter and the search page's "New" badge use that date against each file's `generated` day.
+
+## Bass Pro Shops Canada (basspro.ca)
+
+One online price for the whole site, so this is a one-"store" page like Amazon.ca (about 10 minutes).
+
+1. Open https://www.basspro.ca/l/bargain-cave-sale-and-clearance-shop-all in a new tab, signed out. Do not change the selected store. If a cookie banner shows, choose the most private option.
+2. Paste `refresh/bp_scan.js` (returns "started"), then `refresh/keepalive.js` and check `window.__keepState` is "open".
+3. Poll with `JSON.stringify({phase:__B.phase,page:__B.page,total:__B.total,items:Object.keys(__B.items).length,cats:__B.catDone,errs:__B.errs.length,finished:__B.finished})`.
+   It pages through the site's own Sale list (108 products per page, about 41 pages), then once per top Category (to label products), about 1.5 s between pages.
+   If errs keeps growing or the site shows a challenge page, stop and report; do not work around it.
+4. When finished: `window.__download(window.__bpExport(), 'bp-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`.
+5. Stage that file from Downloads, run `python3 -I refresh/bp_build.py <raw.json> data/bass-pro/deals.json`. It prints the checks (scanned >= 85% of the list, no scan errors, kept >= 100, images >= 90%) and exits 1 if one fails.
+6. Commit only `data/bass-pro/deals.json` ("Refresh Bass Pro data YYYY-MM-DD") and push to `main`.

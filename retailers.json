@@ -47,6 +47,14 @@
       "logo": null,
       "tagline": "Ships to Ontario \u00b7 50% off or more \u00b7 listed at $100 or more",
       "live": true
+    },
+    {
+      "id": "bass-pro",
+      "name": "Bass Pro Shops",
+      "path": "bass-pro/",
+      "logo": null,
+      "tagline": "Online prices \u00b7 50% off or more",
+      "live": true
     }
   ]
 }

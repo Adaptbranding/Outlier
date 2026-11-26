@@ -56,3 +56,10 @@ Open https://www.marks.com/en/sale-clearance/sale.html in your tab. Paste refres
 and click it, wait about 5 s, and confirm `!!window.__cap` is true. Paste refresh/marks_scan.js, then refresh/keepalive.js, and check `window.__keepState` is "open". Poll with the
 runbook's Mark's one-liner (2-3 hours; if `fatal` is set, stop and report it). Export with the runbook's Mark's step 4 (unique name), then
 run `indexedDB.deleteDatabase('marksScan')`.
+
+## Bass Pro Shops Canada
+
+Open https://www.basspro.ca/l/bargain-cave-sale-and-clearance-shop-all in your tab, signed out (never change the selected store). Paste
+refresh/bp_scan.js (it returns "started"), then refresh/keepalive.js, and check `window.__keepState` is "open". Poll with the runbook's
+Bass Pro one-liner (about 10 minutes). Export with the runbook's Bass Pro step 4. The export has no stores, so report `total` (the Sale list
+size), the number of items in it and errs instead of the store numbers.

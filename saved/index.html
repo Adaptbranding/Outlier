@@ -61,7 +61,7 @@
   const fmt = (n) => n == null ? '' : '$' + n.toFixed(2);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const DATA = { 'canadian-tire': 'data/canadian-tire/deals.json', 'marks': 'data/marks/deals.json', 'home-hardware': 'data/home-hardware/deals.json',
-    'amazon': 'data/amazon/deals.json', 'home-depot': 'data/home-depot/deals.json', 'rona': 'data/rona/deals.json' };
+    'amazon': 'data/amazon/deals.json', 'home-depot': 'data/home-depot/deals.json', 'rona': 'data/rona/deals.json', 'bass-pro': 'data/bass-pro/deals.json' };
   const NAMES = {};
   const NOW = {};        // store id -> Map(code -> { sale, orig }) from the latest scan, or null when it could not be loaded
   let sort = 'recent', lastRemoved = null, clearing = false;
