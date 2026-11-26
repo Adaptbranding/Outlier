@@ -252,6 +252,13 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .calcitems li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
 .calcitems li b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .calc[hidden] { display: none; }
+.calcpair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); column-gap: 16px; align-items: stretch; }
+.calcpair .calc { margin: 0 0 18px; }
+.calcrows .sav dd { color: var(--save); }
+.calcrows .sav dt span { color: var(--save); font-weight: 600; }
+.calcitems li s { color: var(--muted); font-weight: 400; margin-right: 4px; }
+.calcitems li em { font-style: normal; color: var(--save); font-weight: 600; font-size: .84rem; margin-left: 4px; }
+.calcitems li b { white-space: nowrap; }
 .calchead { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; flex-wrap: wrap; margin-bottom: 10px; }
 .calchead h2 { margin: 0; }
 .calcpick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .88rem; color: var(--muted); }

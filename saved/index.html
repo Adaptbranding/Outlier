@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=11">
+<link rel="stylesheet" href="../assets/site.css?v=12">
 </head>
 <body>
 <header class="site">
@@ -39,7 +39,10 @@
     </select></div>
   </div>
   <div class="syncbar" id="syncbar" hidden></div>
-  <section class="calc" id="calc" aria-labelledby="calch" hidden></section>
+  <div class="calcpair">
+    <section class="calc" id="calc" aria-labelledby="calch" hidden></section>
+    <section class="calc savings" id="savings" aria-labelledby="savh" hidden></section>
+  </div>
   <p class="loadnote" id="undo" aria-live="polite"></p>
   <div class="grid" id="list"></div>
   <footer>
@@ -143,18 +146,22 @@
   // Totals use the current scan price when it is known, the price you saved it at when the store could not be checked,
   // and leave out products that dropped out of the latest scan (they may no longer be at that price or in stock).
   function calc(list) {
-    let sub = 0, n = 0, skipped = 0, rows = [], pickable = 0;
+    let sub = 0, base = 0, n = 0, skipped = 0, noList = 0, rows = [], pickable = 0;
     for (const x of list) {
       const st = status(x);
       if (isGone(x)) { skipped++; continue; }
       pickable++;
       if (off.has(x.k)) continue;
       const c = cents(st.kind === 'live' ? st.cur.sale : x.p);
-      sub += c; n++;
-      rows.push({ x, c, saved: st.kind !== 'live' });
+      // Base price = the regular price shown crossed out on the card. Without one, the product adds nothing to the savings.
+      const o = st.kind === 'live' ? st.cur.orig : x.o;
+      if (!o) noList++;
+      const oc = o ? Math.max(cents(o), c) : c;
+      sub += c; base += oc; n++;
+      rows.push({ x, c, oc, saved: st.kind !== 'live' });
     }
     const tax = Math.round(sub * TAX);
-    return { sub, tax, total: sub + tax, n, skipped, rows, pickable };
+    return { sub, tax, total: sub + tax, base, save: base - sub, n, skipped, noList, rows, pickable };
   }
 
   function renderCalc(list) {
@@ -177,6 +184,26 @@
       ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${money(r.c)}</b></li>`).join('')}</ul></details>` : ''}`;
   }
 
+  function renderSavings(list) {
+    const el = $('savings');
+    if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
+    const c = calc(list), open = el.querySelector('details') && el.querySelector('details').open;
+    const pct = c.base > 0 ? Math.floor((1 - c.sub / c.base) * 100 + 0.05) : 0;
+    const loading = list.some(x => status(x).kind === 'loading');
+    el.hidden = false;
+    el.innerHTML = `<div class="calchead"><h2 id="savh">Savings</h2>
+        <span class="calcpick"><span class="calcsel">${c.n} of ${c.pickable} selected</span></span></div>
+      <dl class="calcrows">
+        <div><dt>Base prices <span>${c.n} ${c.n === 1 ? 'product' : 'products'}</span></dt><dd>${money(c.base)}</dd></div>
+        <div><dt>Sale prices</dt><dd>${money(c.sub)}</dd></div>
+        <div class="tot sav"><dt>You save${c.save > 0 ? ` <span>${pct}% off</span>` : ''}</dt><dd>${money(c.save)}</dd></div>
+      </dl>
+      <p class="calcnote">Base price is the regular price crossed out on each product, before tax. It uses the same ticked products as the calculator. ${c.noList ? `<b>${c.noList} ${c.noList === 1 ? 'product has' : 'products have'} no regular price listed</b>, so ${c.noList === 1 ? 'it adds' : 'they add'} nothing to the savings. ` : ''}${loading ? 'Still checking the latest prices. ' : ''}Regular prices are set by each store and may not have been what people actually paid.</p>
+      ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${r.oc > r.c ? `<s>${money(r.oc)}</s> ` : ''}${money(r.c)}${r.oc > r.c ? ` <em>save ${money(r.oc - r.c)}</em>` : ''}</b></li>`).join('')}</ul></details>` : ''}`;
+  }
+
+  function renderCalcs(list) { renderCalc(list); renderSavings(list); }
+
   function renderSync() {
     const el = $('syncbar'); if (!el || !window.Sync) return;
     const s = window.Sync.state(), n = window.Saved.count();
@@ -192,7 +219,7 @@
   function render() {
     const list = window.Saved.list();
     renderSync();
-    renderCalc(list);
+    renderCalcs(list);
     $('count').innerHTML = `<b>${list.length.toLocaleString()}</b> saved`;
     $('clearbox').innerHTML = !list.length ? '' : clearing
       ? 'Remove all saved products? <button type="button" class="btn danger" id="clearyes">Yes, remove all</button> <button type="button" class="btn ghost" id="clearno">Keep them</button>'
@@ -220,7 +247,7 @@
       const all = t.id === 'selall';
       window.Saved.list().forEach(x => { if (isGone(x)) return; if (all) off.delete(x.k); else off.add(x.k); });
       document.querySelectorAll('[data-inc]').forEach(b => { b.checked = all; });
-      saveOff(); renderCalc(window.Saved.list());
+      saveOff(); renderCalcs(window.Saved.list());
       const nb = $(t.id); if (nb && !nb.disabled) nb.focus(); else { const o = $(all ? 'selnone' : 'selall'); if (o) o.focus(); }
       return;
     }
@@ -230,7 +257,7 @@
     const b = e.target;
     if (!b.matches || !b.matches('[data-inc]')) return;
     if (b.checked) off.delete(b.dataset.inc); else off.add(b.dataset.inc);
-    saveOff(); renderCalc(window.Saved.list());
+    saveOff(); renderCalcs(window.Saved.list());
   });
   $('sort').addEventListener('change', (e) => { sort = e.target.value; render(); });
   window.Saved.onChange(() => { render(); ensure(); });
