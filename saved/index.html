@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/site.css?v=10">
+<link rel="stylesheet" href="../assets/site.css?v=11">
 </head>
 <body>
 <header class="site">
@@ -18,11 +18,11 @@
     <nav class="menu" id="menu" aria-label="Stores"></nav>
   </div>
 </header>
-<script src="../assets/nav.js?v=5" data-base="../" data-here="saved" defer></script>
+<script src="../assets/nav.js?v=6" data-base="../" data-here="saved" defer></script>
 
 <header class="wrap hero">
   <h1>Saved</h1>
-  <p>Products you saved with the heart button. Each one is checked against the latest scan, so you can see whether the price moved or the deal is gone. The list is kept in this browser on this device.</p>
+  <p>Products you saved with the heart button. Each one is checked against the latest scan, so you can see whether the price moved or the deal is gone. The list is kept in this browser, and in your account if you sign in.</p>
   <div class="stats" id="stats" aria-live="polite"></div>
 </header>
 
@@ -38,18 +38,20 @@
       <option value="store">Store</option>
     </select></div>
   </div>
+  <div class="syncbar" id="syncbar" hidden></div>
   <section class="calc" id="calc" aria-labelledby="calch" hidden></section>
   <p class="loadnote" id="undo" aria-live="polite"></p>
   <div class="grid" id="list"></div>
   <footer>
     <details>
       <summary>About saved products</summary>
-      <p>Saved products live in this browser's local storage on this device. Outlier has no accounts, so the list does not follow you to another phone or computer, and clearing your browser's site data or using a private window removes it. Each saved product keeps the photo, link and price from the moment you saved it. The "now" price comes from the latest daily scan of that store; if a product is missing from the scan it is no longer 50% off or more, or it sold out, so open the store to check. Store prices and stock can differ from what was scanned.</p>
+      <p>Saved products live in this browser's local storage on this device, so clearing your browser's site data or using a private window removes them. Sign in with your email to also keep the list in your account: it then follows you to any phone or computer, and only you can read it. Each saved product keeps the photo, link and price from the moment you saved it. The "now" price comes from the latest daily scan of that store; if a product is missing from the scan it is no longer 50% off or more, or it sold out, so open the store to check. Store prices and stock can differ from what was scanned.</p>
     </details>
   </footer>
 </main>
 
-<script src="../assets/saved.js?v=1"></script>
+<script src="../assets/saved.js?v=2"></script>
+<script src="../assets/sync.js?v=1"></script>
 <script>
 (function () {
   const $ = (id) => document.getElementById(id);
@@ -175,8 +177,21 @@
       ${c.rows.length ? `<details${open ? ' open' : ''}><summary>Itemized list</summary><ul class="calcitems">${c.rows.map(r => `<li><span>${esc(r.x.t)}</span><b>${money(r.c)}</b></li>`).join('')}</ul></details>` : ''}`;
   }
 
+  function renderSync() {
+    const el = $('syncbar'); if (!el || !window.Sync) return;
+    const s = window.Sync.state(), n = window.Saved.count();
+    if (s.status === 'out') {
+      el.hidden = false;
+      el.innerHTML = s.note ? `<span>${esc(s.note)}</span>` + ' <button type="button" class="btn ghost" data-sync>Sign in</button>'
+        : `<span>${n ? 'Your list is only on this device.' : 'Sign in to keep your saved list on all your devices.'}</span><button type="button" class="btn" data-sync>${n ? 'Sign in to keep it on all your devices' : 'Sign in'}</button>`;
+    } else if (s.status === 'busy') { el.hidden = false; el.innerHTML = '<span>Syncing…</span>'; }
+    else if (s.status === 'error') { el.hidden = false; el.innerHTML = `<span><b>Could not sync.</b> Your changes are kept on this device and will sync when the connection is back.</span> <button type="button" class="btn ghost" data-sync>Account</button>`; }
+    else { el.hidden = false; el.innerHTML = `<span>Synced to <b>${esc(s.email)}</b></span><button type="button" class="btn ghost" data-sync>Account</button>`; }
+  }
+
   function render() {
     const list = window.Saved.list();
+    renderSync();
     renderCalc(list);
     $('count').innerHTML = `<b>${list.length.toLocaleString()}</b> saved`;
     $('clearbox').innerHTML = !list.length ? '' : clearing
@@ -200,6 +215,7 @@
     if (t.id === 'undobtn' && lastRemoved) { const r = lastRemoved; lastRemoved = null; window.Saved.toggle(r); return; }
     if (t.id === 'clear') { clearing = true; render(); const y = $('clearno'); if (y) y.focus(); return; }
     if (t.id === 'clearno') { clearing = false; render(); const c = $('clear'); if (c) c.focus(); return; }
+    if (t.closest && t.closest('[data-sync]')) { window.Sync && window.Sync.open(); return; }
     if (t.id === 'selall' || t.id === 'selnone') {
       const all = t.id === 'selall';
       window.Saved.list().forEach(x => { if (isGone(x)) return; if (all) off.delete(x.k); else off.add(x.k); });
@@ -218,6 +234,7 @@
   });
   $('sort').addEventListener('change', (e) => { sort = e.target.value; render(); });
   window.Saved.onChange(() => { render(); ensure(); });
+  if (window.Sync) window.Sync.onChange(() => { render(); ensure(); });
 
   // Check each store that has a saved product against its latest scan (once per store per visit).
   const asked = new Set();

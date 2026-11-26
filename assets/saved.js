@@ -1,9 +1,10 @@
-// Saved products, kept in this browser (localStorage). There are no accounts, so the list stays on this device.
+// Saved products, kept in this browser (localStorage). Signing in (assets/sync.js) copies the list to the person's account so it follows them to other devices.
 //   Saved.btn(snap)       HTML for the heart button; snap = { s: store id, c: product code, t: title, i: photo url,
 //                         u: link, b: brand, p: sale price, o: list price, m: true when the price is a "from" price }
 //   Saved.has(key)        key is store + ':' + code
 //   Saved.list()          saved items, newest first
 //   Saved.remove(key), Saved.clear(), Saved.count()
+//   Saved.setAll(list)    replaces the whole list (used by assets/sync.js when a signed-in account's list is loaded)
 //   Saved.onChange(fn)    runs after the list changes here or in another tab
 // Cards are re-drawn as filters change, so buttons are built from Saved.has() each time and updated in place on click.
 (function () {
@@ -61,6 +62,7 @@
     count: () => read().length,
     remove(k) { write(read().filter(x => x.k !== k)); },
     clear() { write([]); },
+    setAll(list) { write((Array.isArray(list) ? list : []).map(clean).filter(Boolean)); },
     toggle(snap) {
       const c = clean(snap); if (!c) return false;
       const list = read();

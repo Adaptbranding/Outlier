@@ -260,3 +260,35 @@ a.tile:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var
 .inc { margin: 0; display: flex; align-items: center; gap: 8px; font-size: .88rem; cursor: pointer; }
 .inc input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
 .inc.off { color: var(--muted); font-style: italic; cursor: default; }
+
+/* Account sign-in and sync (assets/sync.js) */
+.menu .acct { flex: none; height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-weight: 600; font-size: .92rem; cursor: pointer; }
+.menu .acct:hover { border-color: var(--muted); }
+.menu .acct.on { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); color: var(--accent); }
+@media (max-width: 640px) { .menu .acct { height: 36px; } }
+.acctdlg { border: 0; border-radius: 18px; padding: 0; width: min(440px, calc(100vw - 32px)); color: var(--ink); background: var(--card); box-shadow: 0 24px 70px rgba(15, 19, 25, .35); }
+.acctdlg::backdrop { background: rgba(15, 19, 25, .5); }
+.acctin { position: relative; padding: 26px 26px 22px; }
+.acctin h2 { margin: 0 28px 8px 0; font-size: 1.2rem; text-wrap: balance; }
+.acctx { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.acctx:hover { background: var(--tint); color: var(--ink); }
+.acctnote { margin: 0 0 14px; color: var(--muted); font-size: .94rem; text-wrap: pretty; }
+.acctnote b { color: var(--ink); }
+.acctemail { margin: 0 0 6px; font-weight: 600; word-break: break-all; }
+.acctform { display: grid; gap: 6px; }
+.acctform label { font-size: .84rem; font-weight: 600; }
+.acctform input { height: 46px; border: 1px solid var(--line); border-radius: 12px; padding: 0 14px; font: inherit; background: var(--card); color: var(--ink); }
+.acctform input:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 1px; border-color: var(--accent); }
+.acctform .btn { margin-top: 4px; height: 46px; }
+.acctform .btn:disabled, .acctg:disabled { opacity: .6; cursor: default; }
+.accterr { margin: 0; min-height: 1.2em; color: #b4361f; font-size: .86rem; }
+.acctor { display: flex; align-items: center; gap: 12px; margin: 12px 0; color: var(--muted); font-size: .84rem; }
+.acctor::before, .acctor::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.acctg { width: 100%; height: 46px; display: block; }
+.acctrow { display: flex; gap: 10px; flex-wrap: wrap; }
+.acctrow .btn { flex: none; }
+.acctfine { margin: 14px 0 0; font-size: .8rem; color: var(--muted); }
+.syncbar { margin: 0 0 14px; padding: 10px 14px; display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 12px; background: var(--card); font-size: .9rem; color: var(--muted); }
+.syncbar b { color: var(--ink); font-weight: 600; }
+.syncbar .btn { flex: none; padding: 6px 14px; }
+.syncbar[hidden] { display: none; }
