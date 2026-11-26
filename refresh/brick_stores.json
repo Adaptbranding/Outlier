@@ -1,0 +1,296 @@
+{
+ "checked": "2026-11-26",
+ "note": "store -> online price zone, read from the site after entering each store postal code; Brick Mattress Store locations resolve to a nearby store",
+ "stores": [
+  {
+   "code": "M5",
+   "name": "Ajax/Durham",
+   "zone": "ZBA"
+  },
+  {
+   "code": "FJ",
+   "name": "Bancroft",
+   "zone": "ZFA"
+  },
+  {
+   "code": "4J",
+   "name": "Barrie",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4L",
+   "name": "Belleville",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4E",
+   "name": "Brampton",
+   "zone": "ZBA"
+  },
+  {
+   "code": "57",
+   "name": "Brampton East",
+   "zone": "ZBA"
+  },
+  {
+   "code": "48",
+   "name": "Brantford",
+   "zone": "ZBA"
+  },
+  {
+   "code": "GH",
+   "name": "Brockville",
+   "zone": "ZFF"
+  },
+  {
+   "code": "4B",
+   "name": "Burlington",
+   "zone": "ZBA"
+  },
+  {
+   "code": "EA",
+   "name": "Chatham",
+   "zone": "ZBC"
+  },
+  {
+   "code": "6K",
+   "name": "College Park (Toronto)",
+   "zone": "ZBA"
+  },
+  {
+   "code": "KC",
+   "name": "Collingwood",
+   "zone": "ZCA"
+  },
+  {
+   "code": "GA",
+   "name": "Cornwall",
+   "zone": "ZFF"
+  },
+  {
+   "code": "FK",
+   "name": "Goderich",
+   "zone": "ZFA"
+  },
+  {
+   "code": "EG",
+   "name": "Guelph",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4H",
+   "name": "Hamilton",
+   "zone": "ZBC"
+  },
+  {
+   "code": "GB",
+   "name": "Hawkesbury",
+   "zone": "ZFF"
+  },
+  {
+   "code": "KK",
+   "name": "Huntsville",
+   "zone": "ZCA"
+  },
+  {
+   "code": "3T",
+   "name": "Kanata",
+   "zone": "ZBO"
+  },
+  {
+   "code": "31",
+   "name": "Kingston",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4M",
+   "name": "Kitchener",
+   "zone": "ZBC"
+  },
+  {
+   "code": "4I",
+   "name": "London",
+   "zone": "ZBC"
+  },
+  {
+   "code": "58",
+   "name": "Markham",
+   "zone": "ZBA"
+  },
+  {
+   "code": "KM",
+   "name": "Midland",
+   "zone": "ZCA"
+  },
+  {
+   "code": "5B",
+   "name": "Milton",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4A",
+   "name": "Mississauga",
+   "zone": "ZBA"
+  },
+  {
+   "code": "53",
+   "name": "Mississauga North",
+   "zone": "ZBA"
+  },
+  {
+   "code": "H3",
+   "name": "Superstore Mississauga",
+   "zone": "ZBA"
+  },
+  {
+   "code": "FH",
+   "name": "Moosonee",
+   "zone": "ZFA"
+  },
+  {
+   "code": "KA",
+   "name": "New Liskeard",
+   "zone": "ZFA"
+  },
+  {
+   "code": "55",
+   "name": "Newmarket",
+   "zone": "ZBA"
+  },
+  {
+   "code": "59",
+   "name": "Niagara Falls",
+   "zone": "ZBA"
+  },
+  {
+   "code": "KN",
+   "name": "North Bay",
+   "zone": "ZFA"
+  },
+  {
+   "code": "54",
+   "name": "North York",
+   "zone": "ZBA"
+  },
+  {
+   "code": "5A",
+   "name": "Orangeville",
+   "zone": "ZBA"
+  },
+  {
+   "code": "KB",
+   "name": "Orillia",
+   "zone": "ZCA"
+  },
+  {
+   "code": "33",
+   "name": "Ottawa East",
+   "zone": "ZBO"
+  },
+  {
+   "code": "34",
+   "name": "Ottawa West",
+   "zone": "ZBO"
+  },
+  {
+   "code": "EW",
+   "name": "Owen Sound",
+   "zone": "ZBA"
+  },
+  {
+   "code": "KP",
+   "name": "Pembroke",
+   "zone": "ZFA"
+  },
+  {
+   "code": "4D",
+   "name": "Peterborough",
+   "zone": "ZBA"
+  },
+  {
+   "code": "47",
+   "name": "Richmond Hill",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4U",
+   "name": "Sarnia",
+   "zone": "ZBC"
+  },
+  {
+   "code": "4K",
+   "name": "Scarborough",
+   "zone": "ZBA"
+  },
+  {
+   "code": "H2",
+   "name": "Scarborough Eglinton",
+   "zone": "ZBA"
+  },
+  {
+   "code": "KS",
+   "name": "Simcoe",
+   "zone": "ZCA"
+  },
+  {
+   "code": "4P",
+   "name": "St. Catharines",
+   "zone": "ZBC"
+  },
+  {
+   "code": "EF",
+   "name": "Stratford",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4W",
+   "name": "Sudbury",
+   "zone": "ZBA"
+  },
+  {
+   "code": "7D",
+   "name": "Thunder Bay",
+   "zone": "ZBW"
+  },
+  {
+   "code": "FE",
+   "name": "Timmins",
+   "zone": "ZFA"
+  },
+  {
+   "code": "4C",
+   "name": "Toronto Geary",
+   "zone": "ZBA"
+  },
+  {
+   "code": "H1",
+   "name": "Vaughan",
+   "zone": "ZBA"
+  },
+  {
+   "code": "5D",
+   "name": "Waterloo",
+   "zone": "ZBC"
+  },
+  {
+   "code": "FB",
+   "name": "Wawa",
+   "zone": "ZFA"
+  },
+  {
+   "code": "4N",
+   "name": "Weston - North York",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4T",
+   "name": "Whitby",
+   "zone": "ZBA"
+  },
+  {
+   "code": "4F",
+   "name": "Windsor",
+   "zone": "ZBC"
+  }
+ ]
+}

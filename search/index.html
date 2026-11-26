@@ -123,6 +123,9 @@
     'bass-pro': { data: 'data/bass-pro/deals.json', site: 'https://www.basspro.ca', pad: false, kind: 'am', online: true,
       stock: () => 'online price',
       img: (v) => typeof v === 'string' && /^ProductImages\/[A-Za-z0-9\/_.\-]+$/.test(v) ? 'https://assets.basspro.com/image/upload/f_auto/c_scale,w_400/v1/' + v : '' },
+    'brick': { data: 'data/brick/deals.json', site: 'https://www.thebrick.com', pad: false, kind: 'am', zones: true,
+      stock: () => 'online price',
+      img: (v) => typeof v === 'string' && /^1\/2660\/5202\/[A-Za-z0-9\/_.\-]+$/.test(v) ? 'https://cdn.shopify.com/s/files/' + v + '?width=400' : '' },
     'home-depot': { data: 'data/home-depot/deals.json', site: 'https://www.homedepot.ca', pad: false, kind: 'hw',
       stock: (d) => d.q > 0 ? d.q + ' in store' : 'stock not checked',
       img: (v) => /^https:\/\/images\.homedepot\.ca\/productimages\/p_[A-Za-z0-9\-]+\.jpg(\?product-images=[a-z]+)?$/.test(v) ? v : '' },
@@ -220,6 +223,7 @@
       : `<a class="media none" href="${esc(url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">${badges}</a>`;
     const where = vis.length === 1
       ? `<b>${esc(storeName(r, vis[0].s))}</b> · ${r.cfg.stock(vis[0])}`
+      : r.cfg.zones ? `<b>${vis.length}</b> of ${r.D.storeCount} Ontario stores · ${r.cfg.stock(best)}`
       : `Best at <b>${esc(storeName(r, best.s))}</b> · ${r.cfg.stock(best)}`;
     const more = vis.length > 1 ? `<button type="button" class="btn ghost" data-stores="${idx}">All ${vis.length} stores</button>` : '';
     return `<article class="card">${media}

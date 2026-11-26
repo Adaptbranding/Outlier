@@ -228,3 +228,17 @@ One online price for the whole site, so this is a one-"store" page like Amazon.c
 4. When finished: `window.__download(window.__bpExport(), 'bp-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`.
 5. Stage that file from Downloads, run `python3 -I refresh/bp_build.py <raw.json> data/bass-pro/deals.json`. It prints the checks (scanned >= 85% of the list, no scan errors, kept >= 100, images >= 90%) and exits 1 if one fails.
 6. Commit only `data/bass-pro/deals.json` ("Refresh Bass Pro data YYYY-MM-DD") and push to `main`.
+
+## The Brick (thebrick.com)
+
+The Brick prices online by "zone", not by store, and every Ontario store belongs to one zone. `refresh/brick_stores.json` lists the 58 Ontario stores with their zone (ZBA, ZBC, ZBO, ZCA, ZFA, ZFF, ZBW); `brick_build.py` gives each store its zone's price, so the page can show what each store's area pays. Product pages and the scan read public JSON from the site, so no store has to be selected (about 30,000 products).
+
+1. Open any page on https://www.thebrick.com (for example /collections/last-chance) in a new tab, signed out. Do not change the postal code. If a cookie banner shows, choose the most private option.
+2. Paste `refresh/brick_scan.js` (returns "started"), then `refresh/keepalive.js` and check `window.__keepState` is "open".
+3. Poll with `JSON.stringify({phase:__K.phase,cur:__K.cur,pages:__K.pages,seen:__K.seen,keep:Object.keys(__K.items).length,errs:__K.errs.length,fin:__K.fin})`.
+   It reads every category feed (`/collections/<handle>/products.json`, 250 products a page) plus the `all` and `last-chance` collections. If `errs` keeps growing or a challenge page shows, stop and report; do not work around it.
+4. When `fin` is true: `window.__download(window.__brickExport(), 'brick-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'-') + '.json')`.
+5. Stage that file from Downloads and run `python3 -I refresh/brick_build.py <raw.json> data/brick/deals.json refresh/brick_stores.json`. Checks: scanned at least 25,000 products, no scan errors, kept at least 100, images at least 90%, every store's zone was in the scan. Exit status 1 if one fails.
+6. Commit only `data/brick/deals.json` ("Refresh The Brick data YYYY-MM-DD") and push to `main`.
+
+Store list check: the zone map was made on 2026-11-26 by entering each store's postal code in the site header and reading the zone from the cart. Re-check it if The Brick opens or closes stores. Hamilton East was not tested. Prices are online prices; in-store prices may differ, and the page says so.

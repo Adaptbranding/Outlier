@@ -45,7 +45,7 @@
       "name": "Amazon.ca",
       "path": "amazon/",
       "logo": null,
-      "tagline": "Ships to Ontario \u00b7 50% off or more \u00b7 listed at $100 or more",
+      "tagline": "Ships to Ontario \u00b7 50% off or more",
       "live": true
     },
     {
@@ -54,6 +54,14 @@
       "path": "bass-pro/",
       "logo": null,
       "tagline": "Online prices \u00b7 50% off or more",
+      "live": true
+    },
+    {
+      "id": "brick",
+      "name": "The Brick",
+      "path": "brick/",
+      "logo": null,
+      "tagline": "Ontario stores \u00b7 online prices \u00b7 50% off or more",
       "live": true
     }
   ]

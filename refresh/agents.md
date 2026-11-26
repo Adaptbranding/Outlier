@@ -63,3 +63,10 @@ Open https://www.basspro.ca/l/bargain-cave-sale-and-clearance-shop-all in your t
 refresh/bp_scan.js (it returns "started"), then refresh/keepalive.js, and check `window.__keepState` is "open". Poll with the runbook's
 Bass Pro one-liner (about 10 minutes). Export with the runbook's Bass Pro step 4. The export has no stores, so report `total` (the Sale list
 size), the number of items in it and errs instead of the store numbers.
+
+## The Brick
+
+Open any thebrick.com page (for example https://www.thebrick.com/collections/last-chance) in your tab, signed out, and leave the postal code alone. Paste
+refresh/brick_scan.js (it returns "started"), then refresh/keepalive.js, and check `window.__keepState` is "open". Poll with the runbook's
+Brick one-liner. Export with the runbook's Brick step 4 and build with step 5. The export has no stores, so report `seen`
+(products read), the number of kept items and errs instead of the store numbers.
