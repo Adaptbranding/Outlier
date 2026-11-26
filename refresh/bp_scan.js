@@ -62,6 +62,7 @@
         off += 108; if (off >= r.s[2]) break;
         await sleep(1500);
       }
+      if (window.__BP_LIST_ONLY) { location.hash = '#numberOfResults=108'; B.phase = 'done'; B.finished = true; return; } // per-store runs only need prices
       // 2. label products by Category, top values only
       B.phase = 'cats';
       for (const [name, cnt] of B.cats) {
@@ -80,7 +81,7 @@
     } catch (e) { B.errs.push({ ex: String(e && e.message || e) }); B.phase = 'error'; B.finished = true; }
   })();
 
-  window.__bpExport = () => JSON.stringify({ generated: new Date().toISOString(), total: B.total, cats: B.cats, errs: B.errs.filter((e) => e.stop || e.ex).length, retries: B.errs.length, items: Object.values(B.items).filter(Boolean).map((p) => Object.assign({ cat: B.catOf[p.slug] || '' }, p)) });
+  window.__bpExport = () => JSON.stringify({ generated: new Date().toISOString(), store: ((document.body.innerText.match(/My Store:\s*\n?([^\n]+)/) || [])[1] || '').trim(), total: B.total, cats: B.cats, errs: B.errs.filter((e) => e.stop || e.ex).length, retries: B.errs.length, items: Object.values(B.items).filter(Boolean).map((p) => Object.assign({ cat: B.catOf[p.slug] || '' }, p)) });
   window.__download = window.__download || function (text, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); };
   return 'started';
 })();
